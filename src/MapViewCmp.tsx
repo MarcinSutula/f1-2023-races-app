@@ -1,16 +1,29 @@
 import "./MapViewCmp.css";
 import { useRef, useEffect, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
+import Map from "@arcgis/core/Map";
 import WebMap from "@arcgis/core/WebMap";
+import Expand from "@arcgis/core/widgets/Expand";
+import Bookmarks from "@arcgis/core/widgets/Bookmarks";
 import {
   CalciteShell,
   CalciteShellPanel,
+  CalciteBlock,
+  CalcitePanel,
+  CalciteAction,
+  CalciteCard,
+  CalciteButton,
+  CalciteFlow,
+  CalciteLabel,
 } from "@esri/calcite-components-react";
 import { RaceObj } from "./MapViewCcmp.types";
+import DetailsPanel from "./DetailsPanel";
 
 function MapViewCmp() {
   const mapDiv = useRef(null);
+  const oidRef = useRef(-1);
   const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (mapDiv.current) {
@@ -33,11 +46,14 @@ function MapViewCmp() {
       });
 
       view.on("click", (event) => {
+        console.log(clickedRaceObj);
         view.hitTest(event).then(function (response: __esri.HitTestResult) {
           if (response.results.length > 1) {
             const { graphic, layer } = response.results[0] as __esri.GraphicHit;
             const oid = graphic.attributes.OBJECTID;
-
+            if (oid === oidRef.current) return;
+            oidRef.current = oid;
+            setIsLoading(true);
             (layer as __esri.FeatureLayer)
               .queryFeatures({
                 where: `OBJECTID=${oid}`,
@@ -49,12 +65,18 @@ function MapViewCmp() {
                   const { geometry, attributes } = featureSet.features[0];
                   view.goTo({ geometry, zoom: 8 }).then((_) => {
                     setClickedRaceObj(attributes as RaceObj);
+                    setIsLoading(false);
                   });
                 }
               })
-              .catch((err: ErrorEvent) => console.error(err));
+              .catch((err: ErrorEvent) => {
+                setIsLoading(false);
+                console.error(err);
+              });
           } else {
-            setClickedRaceObj(null);
+            // setClickedRaceObj(null);
+            // oidRef.current = -1;
+            // setIsLoading(false);
           }
         });
       });
@@ -67,23 +89,11 @@ function MapViewCmp() {
   }, []);
 
   return (
-    <div className="mapDiv" ref={mapDiv}>
-      {clickedRaceObj && (
-        <CalciteShell>
-          <CalciteShellPanel slot="panel-start" position="start" detached>
-            {clickedRaceObj.name}
-          </CalciteShellPanel>
-        </CalciteShell>
-      )}
+    <div className="flex h-screen bg-black">
+      <div className="h-screen w-screen p-0 m-0" ref={mapDiv}></div>
+      <DetailsPanel selectedRaceObj={clickedRaceObj} isLoading={isLoading} />
     </div>
   );
 }
 
 export default MapViewCmp;
-
-// extent: {
-//   xmin: 115.244,
-//   ymin: 37.849,
-//   xmax: 144.968,
-//   ymax: 52.387,
-// },
