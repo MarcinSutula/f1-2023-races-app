@@ -22,6 +22,7 @@ import DetailsPanel from "./DetailsPanel";
 function MapViewCmp() {
   const mapDiv = useRef(null);
   const oidRef = useRef(-1);
+  const geometryRef = useRef<__esri.Geometry>();
   const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,12 +47,15 @@ function MapViewCmp() {
       });
 
       view.on("click", (event) => {
-        console.log(clickedRaceObj);
+        if (isLoading) return;
         view.hitTest(event).then(function (response: __esri.HitTestResult) {
           if (response.results.length > 1) {
             const { graphic, layer } = response.results[0] as __esri.GraphicHit;
             const oid = graphic.attributes.OBJECTID;
-            if (oid === oidRef.current) return;
+            if (oid === oidRef.current) {
+              view.goTo({ geometry: geometryRef.current });
+              return;
+            }
             oidRef.current = oid;
             setIsLoading(true);
             (layer as __esri.FeatureLayer)
@@ -65,6 +69,7 @@ function MapViewCmp() {
                   const { geometry, attributes } = featureSet.features[0];
                   view.goTo({ geometry, zoom: 8 }).then((_) => {
                     setClickedRaceObj(attributes as RaceObj);
+                    geometryRef.current = geometry;
                     setIsLoading(false);
                   });
                 }
@@ -73,10 +78,6 @@ function MapViewCmp() {
                 setIsLoading(false);
                 console.error(err);
               });
-          } else {
-            // setClickedRaceObj(null);
-            // oidRef.current = -1;
-            // setIsLoading(false);
           }
         });
       });
