@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
-import MapViewCmp from "./MapViewCmp";
+import App from "./App";
 
 test("renders learn react link", () => {
-  render(<MapViewCmp />);
+  render(<App />);
   // const linkElement = screen.getByText(/learn react/i);
   expect(true).toBeTruthy();
 });

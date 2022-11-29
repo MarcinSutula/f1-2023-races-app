@@ -1,22 +1,24 @@
 import { RaceObj } from "./MapViewCcmp.types";
-import { ThreeCircles } from "react-loader-spinner";
 import { AiOutlineRight, AiOutlineLeft } from "react-icons/ai";
 import DetailInfo from "./DetailInfo";
 
 type DetailsPanelProps = {
-  selectedRaceObj: RaceObj | null;
-  isLoading: boolean;
+  selectedRaceObj: RaceObj | undefined;
 };
 
-function DetailsPanel({ selectedRaceObj, isLoading }: DetailsPanelProps) {
-  const timestampFormatter = (timestamp: EpochTimeStamp): string => {
+function DetailsPanel({ selectedRaceObj }: DetailsPanelProps) {
+  const timestampFormatter = (
+    timestamp: RaceObj["race_date"] | RaceObj["start_date"]
+  ): string => {
     const date = new Date(timestamp);
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     return `${day}.${month}`;
   };
 
-  const lapRecordFormatter = (lapRecordInSeconds: number): string => {
+  const lapRecordFormatter = (
+    lapRecordInSeconds: RaceObj["lap_record_seconds"]
+  ): string => {
     if (!lapRecordInSeconds) return "0";
 
     const lapRecordStr = lapRecordInSeconds.toFixed(3).toString();
@@ -34,6 +36,17 @@ function DetailsPanel({ selectedRaceObj, isLoading }: DetailsPanelProps) {
     return `${minutes ? minutes + ":" : ""}${secondsStr}.${miliSecondsStr}`;
   };
 
+  const imgSrcGenerator = (
+    attribute: RaceObj["country"] | RaceObj["city"],
+    type: "flag" | "circuit"
+  ): string => {
+    const formattedAttr = attribute.replaceAll(" ", "").toLowerCase();
+    const fileExt = type === "flag" ? "png" : "jpg";
+    const imgSrc = `./images/${type}s/${formattedAttr}-${type}.${fileExt}`;
+
+    return imgSrc;
+  };
+
   // selectedRaceObj &&
   //   console.log(
   //     selectedRaceObj.lap_record_owner,
@@ -43,7 +56,7 @@ function DetailsPanel({ selectedRaceObj, isLoading }: DetailsPanelProps) {
 
   return (
     <div className="w-96 border-l-2 border-solid border-black rounded-md bg-[#100636]">
-      {!isLoading && selectedRaceObj && (
+      {selectedRaceObj && (
         <>
           <div className="flex justify-end">
             <div className="text-white text-center m-2 p-2">
@@ -62,8 +75,11 @@ function DetailsPanel({ selectedRaceObj, isLoading }: DetailsPanelProps) {
           </p>
           <div className="w-5/6 h-36 m-auto mt-7">
             <img
-              src={require("./images/circuits/bahrain-circuit.jpg")}
-              alt="Bahrain Circuit"
+              src={require(`${imgSrcGenerator(
+                selectedRaceObj.city,
+                "circuit"
+              )}`)}
+              alt={`${selectedRaceObj.city} Circuit`}
               className="object-cover rounded-lg"
             />
           </div>
@@ -72,8 +88,11 @@ function DetailsPanel({ selectedRaceObj, isLoading }: DetailsPanelProps) {
               selectedRaceObj.start_date
             )}-${timestampFormatter(selectedRaceObj.race_date)}`}</p>
             <img
-              src={require("./images/flags/bahrain-flag.png")}
-              alt="Bahrain Flag"
+              src={require(`${imgSrcGenerator(
+                selectedRaceObj.country,
+                "flag"
+              )}`)}
+              alt={`${selectedRaceObj.country} flag`}
               className="object-cover rounded-lg"
             />
           </div>
@@ -109,30 +128,17 @@ function DetailsPanel({ selectedRaceObj, isLoading }: DetailsPanelProps) {
           )}
 
           <div className="text-center">
-            <button className="bg-[red] h-14 text-center w-5/6 text-white font-bold mt-12">
-              Circuit Details
+            <button
+              disabled
+              onClick={() => {
+                console.log("Circut Details Clicked");
+              }}
+              className="bg-[#ff000038] h-14 text-center w-5/6 text-[#ffffff91] font-bold mt-12"
+            >
+              Work in progress...
             </button>
           </div>
         </>
-      )}
-      {isLoading && (
-        <ThreeCircles
-          height="100"
-          width="100"
-          color="#1e90ff"
-          wrapperStyle={{
-            position: "fixed",
-            top: "50%",
-            left: "45%",
-            transform: "translate(-50%, -50%)",
-          }}
-          wrapperClass=""
-          visible={true}
-          ariaLabel="three-circles-rotating"
-          outerCircleColor="#00008b"
-          innerCircleColor=""
-          middleCircleColor="red"
-        />
       )}
     </div>
   );

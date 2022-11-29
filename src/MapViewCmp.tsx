@@ -1,36 +1,27 @@
 import "./MapViewCmp.css";
 import { useRef, useEffect, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
-import Map from "@arcgis/core/Map";
 import WebMap from "@arcgis/core/WebMap";
-import Expand from "@arcgis/core/widgets/Expand";
-import Bookmarks from "@arcgis/core/widgets/Bookmarks";
-import {
-  CalciteShell,
-  CalciteShellPanel,
-  CalciteBlock,
-  CalcitePanel,
-  CalciteAction,
-  CalciteCard,
-  CalciteButton,
-  CalciteFlow,
-  CalciteLabel,
-} from "@esri/calcite-components-react";
 import { RaceObj } from "./MapViewCcmp.types";
-import DetailsPanel from "./DetailsPanel";
+import { ThreeCircles } from "react-loader-spinner";
 
-function MapViewCmp() {
+type MapViewCmpProps = {
+  setClickedRaceObj: (attributes: RaceObj) => void;
+};
+
+function MapViewCmp({ setClickedRaceObj }: MapViewCmpProps) {
   const mapDiv = useRef(null);
   const oidRef = useRef(-1);
   const geometryRef = useRef<__esri.Geometry>();
-  const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  console.log("Map View Cmp rerender");
 
   useEffect(() => {
     if (mapDiv.current) {
       const webmap = new WebMap({
         portalItem: {
-          id: "69130c846b9d48e086a95b2075d561bc",
+          id: "40cb5afc6ca44c989c1dcaf5ab9dacf7",
         },
       });
 
@@ -90,10 +81,28 @@ function MapViewCmp() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-black">
+    <>
       <div className="h-screen w-screen p-0 m-0" ref={mapDiv}></div>
-      <DetailsPanel selectedRaceObj={clickedRaceObj} isLoading={isLoading} />
-    </div>
+      {isLoading && (
+        <ThreeCircles
+          height="100"
+          width="100"
+          color="#1e90ff"
+          wrapperStyle={{
+            position: "fixed",
+            top: "50%",
+            left: "45%",
+            transform: "translate(-50%, -50%)",
+          }}
+          wrapperClass=""
+          visible={true}
+          ariaLabel="three-circles-rotating"
+          outerCircleColor="#00008b"
+          innerCircleColor=""
+          middleCircleColor="red"
+        />
+      )}
+    </>
   );
 }
 
