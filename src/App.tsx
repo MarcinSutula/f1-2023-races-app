@@ -4,9 +4,7 @@ import { useState } from "react";
 import { RaceObj } from "./MapViewCcmp.types";
 
 function App() {
-  const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj | undefined>(
-    undefined
-  );
+  const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
 
   return (
     <div className="flex h-screen bg-black">

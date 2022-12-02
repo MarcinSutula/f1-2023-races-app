@@ -5,27 +5,28 @@ import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { RaceObj } from "./MapViewCcmp.types";
 import { ThreeCircles } from "react-loader-spinner";
-import { useQueryFeatures } from "./hooks/useQueryFeatures";
 
 type MapViewCmpProps = {
   setClickedRaceObj: (attributes: RaceObj) => void;
 };
 
 function MapViewCmp({ setClickedRaceObj }: MapViewCmpProps) {
-  const mapDiv = useRef(null);
-  const oidRef = useRef(-1);
+  const mapDiv = useRef<HTMLDivElement>(null);
+  const oidRef = useRef<number>();
   const geometryRef = useRef<__esri.Geometry>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [races, queryAllFeatures] = useQueryFeatures();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  console.log("Map View Cmp rerender");
-  console.log("1", races);
-  useEffect(() => {
+  const mapInit = (): [MapView, FeatureLayer] | [] => {
     if (mapDiv.current) {
+      const layer = new FeatureLayer({
+        url: process.env.REACT_APP_FEATURELAYER_URL,
+      });
+
       const webmap = new WebMap({
         portalItem: {
-          id: "40cb5afc6ca44c989c1dcaf5ab9dacf7",
+          id: process.env.REACT_APP_BASEMAP_ID,
         },
+        layers: [layer],
       });
 
       const view = new MapView({
@@ -40,56 +41,71 @@ function MapViewCmp({ setClickedRaceObj }: MapViewCmpProps) {
         popup: null as any,
       });
 
-      view.when(function () {
-        const layer = (view.map.layers as any).items[0];
-        queryAllFeatures(layer as __esri.FeatureLayer);
-        console.log("2", races);
-      });
+      return [view, layer];
+    }
+    return [];
+  };
 
-      view.on("click", (event) => {
-        if (isLoading) return;
-        view.hitTest(event).then(function (response: __esri.HitTestResult) {
-          if (response.results.length > 1) {
-            const { graphic, layer } = response.results[0] as __esri.GraphicHit;
-            const oid = graphic.attributes.OBJECTID;
-            if (oid === oidRef.current) {
-              view.goTo({ geometry: geometryRef.current });
-              return;
-            }
-            oidRef.current = oid;
-            setIsLoading(true);
+  const onMapClick = (view: MapView, racesArr: RaceObj[]) => {
+    view.on("click", async (event) => {
+      if (isLoading) return;
+      const response: __esri.HitTestResult = await view.hitTest(event);
 
-            // (layer as __esri.FeatureLayer)
-            //   .queryFeatures({
-            //     where: `OBJECTID=${oid}`,
-            //     returnGeometry: true,
-            //     outFields: ["*"],
-            //   })
-            //   .then((featureSet: __esri.FeatureSet) => {
-            //     if (featureSet.features.length > 0) {
-            //       const { geometry, attributes } = featureSet.features[0];
-            //       view.goTo({ geometry, zoom: 8 }).then((_) => {
-            //         setClickedRaceObj(attributes as RaceObj);
-            //         geometryRef.current = geometry;
-            //         setIsLoading(false);
-            //       });
-            //     }
-            //   })
-            //   .catch((err: ErrorEvent) => {
-            //     setIsLoading(false);
-            //     console.error(err);
-            //   });
-          }
+      if (response.results.length > 1) {
+        setIsLoading(true);
+        const { graphic } = response.results[0] as __esri.GraphicHit;
+        const hitOid = graphic.attributes.OBJECTID;
+        if (hitOid === oidRef.current) {
+          await view.goTo({ geometry: geometryRef.current });
+          setIsLoading(false);
+          return;
+        }
+        oidRef.current = hitOid;
+
+        const foundRace = racesArr.find((race) => race.OBJECTID === hitOid);
+        if (foundRace) {
+          await view.goTo({ geometry: foundRace.geometry, zoom: 8 });
+          setClickedRaceObj(foundRace);
+          geometryRef.current = foundRace.geometry;
+          setIsLoading(false);
+        } else {
+          throw new Error("Problem with finding matching race");
+        }
+      }
+    });
+  };
+
+  const fetchAllRaces = async (
+    layer: __esri.FeatureLayer
+  ): Promise<RaceObj[]> => {
+    const featureSet: __esri.FeatureSet = await layer.queryFeatures({
+      where: `1=1`,
+      returnGeometry: true,
+      outFields: ["*"],
+    });
+    const racesArr: RaceObj[] = featureSet.features.map((feature) => {
+      return { ...feature.attributes, geometry: feature.geometry };
+    });
+    return racesArr;
+  };
+
+  useEffect(() => {
+    try {
+      const [view, layer] = mapInit();
+      if (view && layer) {
+        view.when(async function () {
+          const racesArr = await fetchAllRaces(layer);
+          onMapClick(view, racesArr);
         });
-      });
-
-      return () => {
-        webmap.destroy();
-        view.destroy();
-      };
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(err.message);
+      }
+      console.error("Unexpected error", err);
     }
   }, []);
-  console.log("3", races);
+
   return (
     <>
       <div className="h-screen w-screen p-0 m-0" ref={mapDiv}></div>

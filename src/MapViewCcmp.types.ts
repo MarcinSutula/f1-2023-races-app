@@ -1,4 +1,6 @@
 export type RaceObj = {
+  OBJECTID: number;
+  geometry: __esri.Geometry;
   name: string;
   city: string;
   country: string;
