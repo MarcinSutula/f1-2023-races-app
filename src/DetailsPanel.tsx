@@ -1,4 +1,4 @@
-import { RaceObj } from "./MapViewCmp.types";
+import { RaceObj } from "./race-types";
 import { AiOutlineRight, AiOutlineLeft } from "react-icons/ai";
 import DetailInfo from "./DetailInfo";
 
