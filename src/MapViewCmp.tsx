@@ -1,10 +1,10 @@
 import "./MapViewCmp.css";
 import { useRef, useEffect, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
-import WebMap from "@arcgis/core/WebMap";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { RaceObj } from "./MapViewCcmp.types";
+import { RaceObj } from "./race-types";
 import { ThreeCircles } from "react-loader-spinner";
+import { useView } from "./hooks/useView";
+import { fetchAllRaces } from "./utils";
 
 type MapViewCmpProps = {
   setClickedRaceObj: (attributes: RaceObj) => void;
@@ -15,36 +15,7 @@ function MapViewCmp({ setClickedRaceObj }: MapViewCmpProps) {
   const oidRef = useRef<number>();
   const geometryRef = useRef<__esri.Geometry>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const mapInit = (): [MapView, FeatureLayer] | [] => {
-    if (mapDiv.current) {
-      const layer = new FeatureLayer({
-        url: process.env.REACT_APP_FEATURELAYER_URL,
-      });
-
-      const webmap = new WebMap({
-        portalItem: {
-          id: process.env.REACT_APP_BASEMAP_ID,
-        },
-        layers: [layer],
-      });
-
-      const view = new MapView({
-        container: mapDiv.current,
-        map: webmap,
-        zoom: 2,
-        constraints: {
-          minScale: 81277252,
-          maxScale: 1500,
-          rotationEnabled: false,
-        },
-        popup: null as any,
-      });
-
-      return [view, layer];
-    }
-    return [];
-  };
+  const [_, setView] = useView();
 
   const onMapClick = (view: MapView, racesArr: RaceObj[]) => {
     view.on("click", async (event) => {
@@ -63,41 +34,28 @@ function MapViewCmp({ setClickedRaceObj }: MapViewCmpProps) {
         oidRef.current = hitOid;
 
         const foundRace = racesArr.find((race) => race.OBJECTID === hitOid);
-        if (foundRace) {
-          await view.goTo({ geometry: foundRace.geometry, zoom: 8 });
-          setClickedRaceObj(foundRace);
-          geometryRef.current = foundRace.geometry;
-          setIsLoading(false);
-        } else {
-          throw new Error("Problem with finding matching race");
-        }
+        if (!foundRace) throw new Error("Problem with finding matching race");
+        await view.goTo({ geometry: foundRace.geometry, zoom: 8 });
+        setClickedRaceObj(foundRace);
+        geometryRef.current = foundRace.geometry;
+        setIsLoading(false);
       }
     });
-  };
-
-  const fetchAllRaces = async (
-    layer: __esri.FeatureLayer
-  ): Promise<RaceObj[]> => {
-    const featureSet: __esri.FeatureSet = await layer.queryFeatures({
-      where: `1=1`,
-      returnGeometry: true,
-      outFields: ["*"],
-    });
-    const racesArr: RaceObj[] = featureSet.features.map((feature) => {
-      return { ...feature.attributes, geometry: feature.geometry };
-    });
-    return racesArr;
   };
 
   useEffect(() => {
     try {
-      const [view, layer] = mapInit();
-      if (view && layer) {
-        view.when(async function () {
-          const racesArr = await fetchAllRaces(layer);
-          onMapClick(view, racesArr);
-        });
-      }
+      const newView = setView(mapDiv);
+      newView.when(async function () {
+        const layers = (newView.map.layers as any)
+          .items as __esri.FeatureLayer[];
+        const racesLayer = layers.find((layer) =>
+          process.env.REACT_APP_FEATURELAYER_URL?.includes(layer.url)
+        );
+        if (!racesLayer) return;
+        const racesArr = await fetchAllRaces(racesLayer);
+        onMapClick(newView, racesArr);
+      });
     } catch (err) {
       if (err instanceof Error) {
         console.error(err.message);

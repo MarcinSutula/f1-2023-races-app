@@ -1,7 +1,7 @@
 import MapViewCmp from "./MapViewCmp";
 import DetailsPanel from "./DetailsPanel";
 import { useState } from "react";
-import { RaceObj } from "./MapViewCcmp.types";
+import { RaceObj } from "./race-types";
 
 function App() {
   const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
