@@ -6,19 +6,20 @@ import PanelImage from "./PanelImage";
 import EventDate from "./components/EventDate";
 import RaceLocation from "./components/RaceLocation";
 import CircuitDetailsBtn from "./components/CircuitDetailsBtn";
+import RaceCounter from "./components/RaceCounter";
 
 type DetailsPanelProps = {
   selectedRaceObj: RaceObj | undefined;
   setSelectedRaceObj: (raceObj: RaceObj) => void;
   setIsLoading: (isLoading: boolean) => void;
-  isLoading: boolean
+  isLoading: boolean;
 };
 
 function DetailsPanel({
   selectedRaceObj,
   setSelectedRaceObj,
   setIsLoading,
-  isLoading
+  isLoading,
 }: DetailsPanelProps) {
   const lapRecordFormatter = (lapRecordInSeconds: number): string => {
     if (!lapRecordInSeconds) return "0";
@@ -42,12 +43,15 @@ function DetailsPanel({
     <div className="w-96 border-l-2 border-solid border-black rounded-md bg-[#100636]">
       {selectedRaceObj && (
         <>
-          <NavigationBtns
-            selectedRaceObj={selectedRaceObj}
-            setSelectedRaceObj={setSelectedRaceObj}
-            setIsLoading={setIsLoading}
-            isLoading={isLoading}
-          />
+          <div className="flex justify-between align-middle mb-2">
+            <RaceCounter selectedRaceOid={selectedRaceObj.OBJECTID}/>
+            <NavigationBtns
+              selectedRaceOid={selectedRaceObj.OBJECTID}
+              setSelectedRaceObj={setSelectedRaceObj}
+              setIsLoading={setIsLoading}
+              isLoading={isLoading}
+            />
+          </div>
           <PanelTitle title={selectedRaceObj.name} />
           <div className="w-5/6 h-36 m-auto mt-7">
             <PanelImage attribute={selectedRaceObj.city} type="circuit" />

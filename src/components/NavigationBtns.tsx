@@ -4,14 +4,14 @@ import { RacesArrContext, ViewContext } from "../App";
 import { RaceObj } from "../race-types";
 
 type NavigationBtnsProps = {
-  selectedRaceObj: RaceObj;
+  selectedRaceOid: RaceObj["OBJECTID"];
   setSelectedRaceObj: (raceObj: RaceObj) => void;
   setIsLoading: (isLoading: boolean) => void;
   isLoading: boolean;
 };
 
 function NavigationBtns({
-  selectedRaceObj,
+  selectedRaceOid,
   setSelectedRaceObj,
   setIsLoading,
   isLoading,
@@ -19,10 +19,8 @@ function NavigationBtns({
   const viewCtx = useContext(ViewContext);
   const racesArrCtx = useContext(RacesArrContext);
 
-  const isBackBtnDisabled =
-    racesArrCtx?.at(0)?.OBJECTID === selectedRaceObj.OBJECTID;
-  const isNextBtnDisabled =
-    racesArrCtx?.at(-1)?.OBJECTID === selectedRaceObj.OBJECTID;
+  const isBackBtnDisabled = racesArrCtx?.at(0)?.OBJECTID === selectedRaceOid;
+  const isNextBtnDisabled = racesArrCtx?.at(-1)?.OBJECTID === selectedRaceOid;
 
   const btnColorHandler = (disabled: boolean): string =>
     disabled ? "grey" : "red";
@@ -38,7 +36,7 @@ function NavigationBtns({
       setIsLoading(true);
 
       const selectedRaceIndex = racesArrCtx.findIndex(
-        (race) => race.OBJECTID === selectedRaceObj.OBJECTID
+        (race) => race.OBJECTID === selectedRaceOid
       );
       if (selectedRaceIndex === -1) {
         setIsLoading(false);
@@ -62,27 +60,25 @@ function NavigationBtns({
   };
 
   return (
-    <div className="flex justify-end">
-      <div className="text-white text-center m-2 p-2">
-        <button
-          onClick={() => navigationHandler("back")}
-          disabled={isBackBtnDisabled}
-        >
-          <AiOutlineLeft
-            color={btnColorHandler(isBackBtnDisabled)}
-            fontSize={40}
-          />
-        </button>
-        <button
-          onClick={() => navigationHandler("next")}
-          disabled={isNextBtnDisabled}
-        >
-          <AiOutlineRight
-            color={btnColorHandler(isNextBtnDisabled)}
-            fontSize={40}
-          />
-        </button>
-      </div>
+    <div className="text-white text-center m-2 p-2">
+      <button
+        onClick={() => navigationHandler("back")}
+        disabled={isBackBtnDisabled}
+      >
+        <AiOutlineLeft
+          color={btnColorHandler(isBackBtnDisabled)}
+          fontSize={40}
+        />
+      </button>
+      <button
+        onClick={() => navigationHandler("next")}
+        disabled={isNextBtnDisabled}
+      >
+        <AiOutlineRight
+          color={btnColorHandler(isNextBtnDisabled)}
+          fontSize={40}
+        />
+      </button>
     </div>
   );
 }
