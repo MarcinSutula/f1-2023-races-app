@@ -1,24 +1,18 @@
 import { RaceObj } from "./race-types";
-import { AiOutlineRight, AiOutlineLeft } from "react-icons/ai";
-import DetailInfo from "./DetailInfo";
+import DetailInfo from "./components/DetailInfo";
+import NavigationBtns from "./components/NavigationBtns";
+import PanelTitle from "./components/PanelTitle";
+import PanelImage from "./PanelImage";
+import EventDate from "./components/EventDate";
+import RaceLocation from "./components/RaceLocation";
+import CircuitDetailsBtn from "./components/CircuitDetailsBtn";
 
 type DetailsPanelProps = {
   selectedRaceObj: RaceObj | undefined;
 };
 
 function DetailsPanel({ selectedRaceObj }: DetailsPanelProps) {
-  const timestampFormatter = (
-    timestamp: RaceObj["race_date"] | RaceObj["start_date"]
-  ): string => {
-    const date = new Date(timestamp);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    return `${day}.${month}`;
-  };
-
-  const lapRecordFormatter = (
-    lapRecordInSeconds: RaceObj["lap_record_seconds"]
-  ): string => {
+  const lapRecordFormatter = (lapRecordInSeconds: number): string => {
     if (!lapRecordInSeconds) return "0";
 
     const lapRecordStr = lapRecordInSeconds.toFixed(3).toString();
@@ -36,67 +30,26 @@ function DetailsPanel({ selectedRaceObj }: DetailsPanelProps) {
     return `${minutes ? minutes + ":" : ""}${secondsStr}.${miliSecondsStr}`;
   };
 
-  const imgSrcGenerator = (
-    attribute: RaceObj["country"] | RaceObj["city"],
-    type: "flag" | "circuit"
-  ): string => {
-    const formattedAttr = attribute.replaceAll(" ", "").toLowerCase();
-    const fileExt = type === "flag" ? "png" : "jpg";
-    const imgSrc = `./images/${type}s/${formattedAttr}-${type}.${fileExt}`;
-
-    return imgSrc;
-  };
-
-  // selectedRaceObj &&
-  //   console.log(
-  //     selectedRaceObj.lap_record_owner,
-  //     selectedRaceObj.lap_record_year,
-  //     selectedRaceObj
-  //   );
-
   return (
     <div className="w-96 border-l-2 border-solid border-black rounded-md bg-[#100636]">
       {selectedRaceObj && (
         <>
-          <div className="flex justify-end">
-            <div className="text-white text-center m-2 p-2">
-              <button>
-                <AiOutlineLeft color="red" fontSize={40} />
-              </button>
-              <button>
-                <AiOutlineRight color="red" fontSize={40} />
-              </button>
-            </div>
-          </div>
-          <p className="text-white text-center font-bold text-3xl">
-            {selectedRaceObj
-              ? selectedRaceObj.name
-              : "Click an object to see it's details"}
-          </p>
+          <NavigationBtns />
+          <PanelTitle title={selectedRaceObj.name} />
           <div className="w-5/6 h-36 m-auto mt-7">
-            <img
-              src={require(`${imgSrcGenerator(
-                selectedRaceObj.city,
-                "circuit"
-              )}`)}
-              alt={`${selectedRaceObj.city} Circuit`}
-              className="object-cover rounded-lg"
-            />
+            <PanelImage attribute={selectedRaceObj.city} type="circuit" />
           </div>
           <div className="flex h-8 mt-12 justify-between mx-7">
-            <p className="text-white text-center text-2xl">{`${timestampFormatter(
-              selectedRaceObj.start_date
-            )}-${timestampFormatter(selectedRaceObj.race_date)}`}</p>
-            <img
-              src={require(`${imgSrcGenerator(
-                selectedRaceObj.country,
-                "flag"
-              )}`)}
-              alt={`${selectedRaceObj.country} flag`}
-              className="object-cover rounded-lg"
+            <EventDate
+              startDate={selectedRaceObj.start_date}
+              endDate={selectedRaceObj.race_date}
             />
+            <PanelImage attribute={selectedRaceObj.country} type="flag" />
           </div>
-          <p className="text-white text-2xl text-center my-6">{`${selectedRaceObj.city}, ${selectedRaceObj.country}`}</p>
+          <RaceLocation
+            city={selectedRaceObj.city}
+            country={selectedRaceObj.country}
+          />
           <DetailInfo
             label="Race Distance"
             info={selectedRaceObj.race_dist.toString()}
@@ -126,18 +79,7 @@ function DetailsPanel({ selectedRaceObj }: DetailsPanelProps) {
               }) ${lapRecordFormatter(selectedRaceObj.lap_record_seconds)}`}
             />
           )}
-
-          <div className="text-center">
-            <button
-              disabled
-              onClick={() => {
-                console.log("Circut Details Clicked");
-              }}
-              className="bg-[#ff000038] h-14 text-center w-5/6 text-[#ffffff91] font-bold mt-12"
-            >
-              Work in progress...
-            </button>
-          </div>
+          <CircuitDetailsBtn />
         </>
       )}
     </div>
