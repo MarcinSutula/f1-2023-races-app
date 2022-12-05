@@ -9,9 +9,17 @@ import CircuitDetailsBtn from "./components/CircuitDetailsBtn";
 
 type DetailsPanelProps = {
   selectedRaceObj: RaceObj | undefined;
+  setSelectedRaceObj: (raceObj: RaceObj) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  isLoading: boolean
 };
 
-function DetailsPanel({ selectedRaceObj }: DetailsPanelProps) {
+function DetailsPanel({
+  selectedRaceObj,
+  setSelectedRaceObj,
+  setIsLoading,
+  isLoading
+}: DetailsPanelProps) {
   const lapRecordFormatter = (lapRecordInSeconds: number): string => {
     if (!lapRecordInSeconds) return "0";
 
@@ -34,7 +42,12 @@ function DetailsPanel({ selectedRaceObj }: DetailsPanelProps) {
     <div className="w-96 border-l-2 border-solid border-black rounded-md bg-[#100636]">
       {selectedRaceObj && (
         <>
-          <NavigationBtns />
+          <NavigationBtns
+            selectedRaceObj={selectedRaceObj}
+            setSelectedRaceObj={setSelectedRaceObj}
+            setIsLoading={setIsLoading}
+            isLoading={isLoading}
+          />
           <PanelTitle title={selectedRaceObj.name} />
           <div className="w-5/6 h-36 m-auto mt-7">
             <PanelImage attribute={selectedRaceObj.city} type="circuit" />
