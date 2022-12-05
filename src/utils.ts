@@ -3,6 +3,13 @@ import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { RefObject } from "react";
+import {
+  GO_TO_RACE_ANIMATION_DURATION,
+  GO_TO_RACE_ANIMATION_EASING,
+  GO_TO_RACE_ZOOM,
+  MAX_SCALE,
+  MIN_SCALE,
+} from "./config";
 
 export const fetchAllRaces = async (
   layer: __esri.FeatureLayer
@@ -20,9 +27,7 @@ export const fetchAllRaces = async (
   return racesArr;
 };
 
-export const createNewMapView = (
-  mapDivRef: RefObject<HTMLDivElement>
-): MapView => {
+export const initMapView = (mapDivRef: RefObject<HTMLDivElement>): MapView => {
   const layer = new FeatureLayer({
     url: process.env.REACT_APP_FEATURELAYER_URL,
   });
@@ -36,10 +41,9 @@ export const createNewMapView = (
   const newView = new MapView({
     container: mapDivRef.current as HTMLDivElement,
     map: webmap,
-    zoom: 2,
     constraints: {
-      minScale: 81277252,
-      maxScale: 1500,
+      minScale: MIN_SCALE,
+      maxScale: MAX_SCALE,
       rotationEnabled: false,
     },
     popup: undefined,
@@ -56,4 +60,42 @@ export const getRacesLayer = (
     process.env.REACT_APP_FEATURELAYER_URL?.includes(layer.url)
   );
   return racesLayer ? racesLayer : undefined;
+};
+
+export const viewGoToRace = (
+  view: MapView,
+  raceGeometry: __esri.Geometry
+): Promise<void> => {
+  return view.goTo(
+    { geometry: raceGeometry, zoom: GO_TO_RACE_ZOOM },
+    {
+      duration: GO_TO_RACE_ANIMATION_DURATION,
+      easing: GO_TO_RACE_ANIMATION_EASING,
+    }
+  );
+};
+
+export const lapRecordFormatter = (lapRecordInSeconds: number): string => {
+  if (!lapRecordInSeconds) return "0";
+
+  const lapRecordStr = lapRecordInSeconds.toFixed(3).toString();
+  let [secondsStr, miliSecondsStr] = lapRecordStr.split(".");
+  let minutes = 0;
+
+  if (+secondsStr >= 60) {
+    minutes = Math.floor(+secondsStr / 60);
+    secondsStr = (+secondsStr - minutes * 60).toString();
+  }
+  if (+secondsStr < 10) {
+    secondsStr = "0" + secondsStr;
+  }
+
+  return `${minutes ? minutes + ":" : ""}${secondsStr}.${miliSecondsStr}`;
+};
+
+export const timestampFormatter = (timestamp: EpochTimeStamp): string => {
+  const date = new Date(timestamp);
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  return `${day}.${month}`;
 };

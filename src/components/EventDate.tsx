@@ -1,4 +1,5 @@
 import { RaceObj } from "../race-types";
+import { timestampFormatter } from "../utils";
 
 type EventDateProps = {
   startDate: RaceObj["start_date"];
@@ -6,13 +7,6 @@ type EventDateProps = {
 };
 
 function EventDate({ startDate, endDate }: EventDateProps) {
-  const timestampFormatter = (timestamp: EpochTimeStamp): string => {
-    const date = new Date(timestamp);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    return `${day}.${month}`;
-  };
-
   const formattedStartDate = timestampFormatter(startDate);
   const formattedEndDate = timestampFormatter(endDate);
   const eventDate = `${formattedStartDate}-${formattedEndDate}`;

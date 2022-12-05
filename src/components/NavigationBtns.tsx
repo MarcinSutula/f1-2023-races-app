@@ -2,6 +2,7 @@ import { AiOutlineRight, AiOutlineLeft } from "react-icons/ai";
 import { useContext } from "react";
 import { RacesArrContext, ViewContext } from "../App";
 import { RaceObj } from "../race-types";
+import { viewGoToRace } from "../utils";
 
 type NavigationBtnsProps = {
   selectedRaceOid: RaceObj["OBJECTID"];
@@ -46,7 +47,7 @@ function NavigationBtns({
         mode === "next" ? selectedRaceIndex + 1 : selectedRaceIndex - 1;
 
       const followingRace = racesArrCtx[followingRaceIndex];
-      await viewCtx.goTo({ geometry: followingRace.geometry, zoom: 8 });
+      await viewGoToRace(viewCtx, followingRace.geometry);
       setSelectedRaceObj(followingRace);
       setIsLoading(false);
     } catch (err) {

@@ -7,44 +7,27 @@ import EventDate from "./components/EventDate";
 import RaceLocation from "./components/RaceLocation";
 import CircuitDetailsBtn from "./components/CircuitDetailsBtn";
 import RaceCounter from "./components/RaceCounter";
+import { lapRecordFormatter } from "./utils";
 
 type DetailsPanelProps = {
   selectedRaceObj: RaceObj | undefined;
   setSelectedRaceObj: (raceObj: RaceObj) => void;
-  setIsLoading: (isLoading: boolean) => void;
   isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 };
 
 function DetailsPanel({
   selectedRaceObj,
   setSelectedRaceObj,
-  setIsLoading,
   isLoading,
+  setIsLoading,
 }: DetailsPanelProps) {
-  const lapRecordFormatter = (lapRecordInSeconds: number): string => {
-    if (!lapRecordInSeconds) return "0";
-
-    const lapRecordStr = lapRecordInSeconds.toFixed(3).toString();
-    let [secondsStr, miliSecondsStr] = lapRecordStr.split(".");
-    let minutes = 0;
-
-    if (+secondsStr >= 60) {
-      minutes = Math.floor(+secondsStr / 60);
-      secondsStr = (+secondsStr - minutes * 60).toString();
-    }
-    if (+secondsStr < 10) {
-      secondsStr = "0" + secondsStr;
-    }
-
-    return `${minutes ? minutes + ":" : ""}${secondsStr}.${miliSecondsStr}`;
-  };
-
   return (
     <div className="w-96 border-l-2 border-solid border-black rounded-md bg-[#100636]">
       {selectedRaceObj && (
         <>
           <div className="flex justify-between align-middle mb-2">
-            <RaceCounter selectedRaceOid={selectedRaceObj.OBJECTID}/>
+            <RaceCounter selectedRaceOid={selectedRaceObj.OBJECTID} />
             <NavigationBtns
               selectedRaceOid={selectedRaceObj.OBJECTID}
               setSelectedRaceObj={setSelectedRaceObj}

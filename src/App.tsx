@@ -2,7 +2,12 @@ import "./App.css";
 import DetailsPanel from "./DetailsPanel";
 import { useState, useEffect, createContext, useRef } from "react";
 import { RaceObj } from "./race-types";
-import { createNewMapView, fetchAllRaces, getRacesLayer } from "./utils";
+import {
+  initMapView,
+  fetchAllRaces,
+  getRacesLayer,
+  viewGoToRace,
+} from "./utils";
 import MapView from "@arcgis/core/views/MapView";
 import MapSpinner from "./components/MapSpinner";
 
@@ -19,7 +24,7 @@ function App() {
   const geometryRef = useRef<__esri.Geometry>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const onMapClick = (view: MapView, races: RaceObj[]) => {
+  const onMapClick = (view: MapView, races: RaceObj[]): void => {
     view.on("click", async (event) => {
       if (isLoading) return;
       const response: __esri.HitTestResult = await view.hitTest(event);
@@ -38,7 +43,7 @@ function App() {
           setIsLoading(false);
           throw new Error("Problem with finding matching race");
         }
-        await view.goTo({ geometry: foundRace.geometry, zoom: 8 });
+        await viewGoToRace(view, foundRace.geometry);
         setClickedRaceObj(foundRace);
         geometryRef.current = foundRace.geometry;
         setIsLoading(false);
@@ -48,7 +53,7 @@ function App() {
 
   useEffect(() => {
     try {
-      const newView = createNewMapView(mapDiv);
+      const newView = initMapView(mapDiv);
       newView.when(async function () {
         setView(newView);
         const racesLayer = getRacesLayer(newView);
