@@ -3,7 +3,11 @@ type PanelTitleProps = {
 };
 
 function PanelTitle({ title }: PanelTitleProps) {
-  return <p className="text-white text-center font-bold text-3xl">{title}</p>;
+  return (
+    <div className="h-20 flex justify-center items-center">
+      <p className="text-white font-bold text-3xl text-center">{title}</p>
+    </div>
+  );
 }
 
 export default PanelTitle;
