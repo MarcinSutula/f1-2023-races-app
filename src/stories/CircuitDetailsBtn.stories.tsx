@@ -13,4 +13,4 @@ const Template: ComponentStory<typeof CircuitDetailsBtn> = () => (
   </PanelCard>
 );
 
-export const Test = Template.bind({});
+export const DISABLED = Template.bind({});

@@ -1,14 +1,14 @@
 import { RaceObj } from "../race-types";
 import { timestampFormatter } from "../utils";
 
-type EventDateProps = {
-  startDate: RaceObj["start_date"];
-  endDate: RaceObj["race_date"];
+export type EventDateProps = {
+  startTimestamp: RaceObj["start_date"];
+  endTimestamp: RaceObj["race_date"];
 };
 
-function EventDate({ startDate, endDate }: EventDateProps) {
-  const formattedStartDate = timestampFormatter(startDate);
-  const formattedEndDate = timestampFormatter(endDate);
+function EventDate({ startTimestamp, endTimestamp }: EventDateProps) {
+  const formattedStartDate = timestampFormatter(startTimestamp);
+  const formattedEndDate = timestampFormatter(endTimestamp);
   const eventDate = `${formattedStartDate}-${formattedEndDate}`;
 
   return <p className="text-white text-center text-2xl">{eventDate}</p>;

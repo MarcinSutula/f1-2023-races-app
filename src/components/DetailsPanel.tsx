@@ -42,8 +42,8 @@ function DetailsPanel({
           </div>
           <div className="flex h-8 mt-12 justify-between mx-7">
             <EventDate
-              startDate={selectedRaceObj.start_date}
-              endDate={selectedRaceObj.race_date}
+              startTimestamp={selectedRaceObj.start_date}
+              endTimestamp={selectedRaceObj.race_date}
             />
             <PanelImage attribute={selectedRaceObj.country} type="flag" />
           </div>

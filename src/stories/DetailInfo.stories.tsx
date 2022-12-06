@@ -67,7 +67,7 @@ NumberOfDRSZones.args = {
 export const MainLapRecord = Template.bind({}) as any;
 MainLapRecord.args = {
   label: "Lap Record",
-  info: `Lewis Hamilton (2020) 1:16.627`,
+  info: "Max Verstappen (2020) 1:16.627",
   main: true,
   backgroundColor: bgColor,
 };

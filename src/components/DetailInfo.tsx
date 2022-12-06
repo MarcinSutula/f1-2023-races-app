@@ -4,6 +4,7 @@ export type DetailInfoProps = {
   measure?: string;
   separatorIndex?: number;
   main?: boolean;
+  customMainLabelColor?: string;
 };
 
 function DetailInfo({
@@ -12,6 +13,7 @@ function DetailInfo({
   measure = "",
   separatorIndex = 0,
   main = false,
+  customMainLabelColor,
 }: DetailInfoProps) {
   let styleP1 = "text-white text-l text-left";
   let styleP2 = "text-white text-l text-right";
@@ -27,7 +29,12 @@ function DetailInfo({
 
   return (
     <div className="mt-2 mx-5">
-      <p className={styleP1}>{label}</p>
+      <p
+        className={styleP1}
+        style={{ color: customMainLabelColor && main ? customMainLabelColor : "" }}
+      >
+        {label}
+      </p>
       <p className={styleP2}>{main ? info : info + measure}</p>
     </div>
   );

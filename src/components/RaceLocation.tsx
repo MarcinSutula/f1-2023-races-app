@@ -1,6 +1,6 @@
 import { RaceObj } from "../race-types";
 
-type RaceLocationProps = {
+export type RaceLocationProps = {
   city: RaceObj["city"];
   country: RaceObj["country"];
 };

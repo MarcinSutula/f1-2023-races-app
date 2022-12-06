@@ -8,7 +8,7 @@ type PanelCardProps = {
 function PanelCard({ children, backgroundColor }: PanelCardProps) {
   return (
     <div
-      className={`w-96 h-screen border-l-2 border-solid border-black rounded-md`}
+      className={`w-96 h-screen border-l-2 border-solid border-black`}
       style={{ backgroundColor }}
     >
       {children}
