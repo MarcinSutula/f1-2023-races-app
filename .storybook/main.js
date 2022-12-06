@@ -11,13 +11,13 @@ module.exports = {
   core: {
     builder: "@storybook/builder-webpack5",
   },
-  // typescript: {
-  //   reactDocgen: "react-docgen-typescript",
-  //   reactDocgenTypescriptOptions: {
-  //     compilerOptions: {
-  //       allowSyntheticDefaultImports: false,
-  //       esModuleInterop: false,
-  //     },
-  //   },
-  // },
+  typescript: {
+    reactDocgen: "react-docgen-typescript",
+    reactDocgenTypescriptOptions: {
+      compilerOptions: {
+        allowSyntheticDefaultImports: false,
+        esModuleInterop: false,
+      },
+    },
+  },
 };

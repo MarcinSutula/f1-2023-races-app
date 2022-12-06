@@ -1,5 +1,5 @@
 import "./App.css";
-import DetailsPanel from "./DetailsPanel";
+import DetailsPanel from "./components/DetailsPanel";
 import { useState, useEffect, createContext, useRef } from "react";
 import { RaceObj } from "./race-types";
 import {

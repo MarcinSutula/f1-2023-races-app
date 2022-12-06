@@ -1,8 +1,16 @@
 import CircuitDetailsBtn from "../components/CircuitDetailsBtn";
+import { ComponentMeta, ComponentStory } from "@storybook/react";
+import PanelCard from "../components/PanelCard";
 
 export default {
-  title: "Circuit Details Button",
+  title: "Race Details Panel/Circuit Details Button",
   component: CircuitDetailsBtn,
-};
+} as ComponentMeta<typeof CircuitDetailsBtn>;
 
-export const Test = <CircuitDetailsBtn />;
+const Template: ComponentStory<typeof CircuitDetailsBtn> = () => (
+  <PanelCard backgroundColor="#100636">
+    <CircuitDetailsBtn />
+  </PanelCard>
+);
+
+export const Test = Template.bind({});

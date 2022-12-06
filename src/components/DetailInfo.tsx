@@ -1,4 +1,4 @@
-type DetailInfoProps = {
+export type DetailInfoProps = {
   label: string;
   info: string;
   measure?: string;
@@ -21,14 +21,14 @@ function DetailInfo({
     styleP2 = "text-white text-2xl text-center";
   }
 
-  if (separatorIndex) {
+  if (separatorIndex && !main) {
     info = info.slice(0, separatorIndex) + "." + info.slice(separatorIndex);
   }
 
   return (
     <div className="mt-2 mx-5">
       <p className={styleP1}>{label}</p>
-      <p className={styleP2}>{info + measure}</p>
+      <p className={styleP2}>{main ? info : info + measure}</p>
     </div>
   );
 }

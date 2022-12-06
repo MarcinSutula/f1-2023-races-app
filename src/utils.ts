@@ -75,7 +75,9 @@ export const viewGoToRace = (
   );
 };
 
-export const lapRecordFormatter = (lapRecordInSeconds: number): string => {
+export const lapRecordFormatter = (
+  lapRecordInSeconds: number | null
+): string => {
   if (!lapRecordInSeconds) return "0";
 
   const lapRecordStr = lapRecordInSeconds.toFixed(3).toString();
@@ -98,4 +100,12 @@ export const timestampFormatter = (timestamp: EpochTimeStamp): string => {
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   return `${day}.${month}`;
+};
+
+export const lapRecordInfoFormatter = (
+  owner: string,
+  year: number,
+  seconds: number
+): string => {
+  return `${owner} (${year}) ${lapRecordFormatter(seconds)}`;
 };

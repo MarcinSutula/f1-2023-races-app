@@ -1,13 +1,14 @@
-import { RaceObj } from "./race-types";
-import DetailInfo from "./components/DetailInfo";
-import NavigationBtns from "./components/NavigationBtns";
-import PanelTitle from "./components/PanelTitle";
-import PanelImage from "./PanelImage";
-import EventDate from "./components/EventDate";
-import RaceLocation from "./components/RaceLocation";
-import CircuitDetailsBtn from "./components/CircuitDetailsBtn";
-import RaceCounter from "./components/RaceCounter";
-import { lapRecordFormatter } from "./utils";
+import { RaceObj } from "../race-types";
+import DetailInfo from "./DetailInfo";
+import NavigationBtns from "./NavigationBtns";
+import PanelTitle from "./PanelTitle";
+import PanelImage from "../PanelImage";
+import EventDate from "./EventDate";
+import RaceLocation from "./RaceLocation";
+import CircuitDetailsBtn from "./CircuitDetailsBtn";
+import RaceCounter from "./RaceCounter";
+import { lapRecordInfoFormatter } from "../utils";
+import PanelCard from "./PanelCard";
 
 type DetailsPanelProps = {
   selectedRaceObj: RaceObj | undefined;
@@ -23,7 +24,7 @@ function DetailsPanel({
   setIsLoading,
 }: DetailsPanelProps) {
   return (
-    <div className="w-96 border-l-2 border-solid border-black rounded-md bg-[#100636]">
+    <PanelCard backgroundColor="#100636">
       {selectedRaceObj && (
         <>
           <div className="flex justify-between align-middle mb-2">
@@ -70,19 +71,23 @@ function DetailsPanel({
             label="Number of DRS Zones"
             info={selectedRaceObj.drs_zones_num.toString()}
           />
-          {selectedRaceObj.lap_record_owner && (
-            <DetailInfo
-              label="Lap Record"
-              main
-              info={`${selectedRaceObj.lap_record_owner} (${
-                selectedRaceObj.lap_record_year
-              }) ${lapRecordFormatter(selectedRaceObj.lap_record_seconds)}`}
-            />
-          )}
+          {selectedRaceObj.lap_record_owner &&
+            selectedRaceObj.lap_record_year &&
+            selectedRaceObj.lap_record_seconds && (
+              <DetailInfo
+                label="Lap Record"
+                main
+                info={lapRecordInfoFormatter(
+                  selectedRaceObj.lap_record_owner,
+                  selectedRaceObj.lap_record_year,
+                  selectedRaceObj.lap_record_seconds
+                )}
+              />
+            )}
           <CircuitDetailsBtn />
         </>
       )}
-    </div>
+    </PanelCard>
   );
 }
 
