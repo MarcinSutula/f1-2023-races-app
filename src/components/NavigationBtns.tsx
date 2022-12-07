@@ -28,7 +28,6 @@ function NavigationBtns({
 
   const navigationHandler = async (mode: "next" | "back") => {
     try {
-      if (isLoading) return;
       const isDisabled =
         mode === "next" ? isNextBtnDisabled : isBackBtnDisabled;
 
@@ -64,7 +63,7 @@ function NavigationBtns({
     <div className="text-white text-center m-2 p-2">
       <button
         onClick={() => navigationHandler("back")}
-        disabled={isBackBtnDisabled}
+        disabled={isLoading || isBackBtnDisabled}
       >
         <AiOutlineLeft
           color={btnColorHandler(isBackBtnDisabled)}
@@ -73,7 +72,7 @@ function NavigationBtns({
       </button>
       <button
         onClick={() => navigationHandler("next")}
-        disabled={isNextBtnDisabled}
+        disabled={isLoading || isNextBtnDisabled}
       >
         <AiOutlineRight
           color={btnColorHandler(isNextBtnDisabled)}
