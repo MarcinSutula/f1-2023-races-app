@@ -1,6 +1,6 @@
 import { RaceObj } from "../race-types";
 import DetailInfo from "./DetailInfo";
-import NavigationBtns from "./NavigationBtns";
+import NavigationBtns from "./NavigationBtnsContainer";
 import PanelTitle from "./PanelTitle";
 import PanelImage from "../PanelImage";
 import EventDate from "./EventDate";

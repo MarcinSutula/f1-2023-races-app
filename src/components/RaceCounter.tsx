@@ -2,7 +2,7 @@ import { RaceObj } from "../race-types";
 import { useContext } from "react";
 import { RacesArrContext } from "../App";
 
-type RaceCounterProps = {
+export type RaceCounterProps = {
   selectedRaceOid: RaceObj["OBJECTID"];
 };
 

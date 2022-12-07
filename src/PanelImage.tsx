@@ -2,12 +2,13 @@
 
 import { RaceObj } from "./race-types";
 
-type ImageProps = {
+export type ImageProps = {
   attribute: RaceObj["country"] | RaceObj["city"];
   type: "flag" | "circuit";
+  customUrl?: string;
 };
 
-function PanelImage({ attribute, type }: ImageProps) {
+function PanelImage({ attribute, type, customUrl = "" }: ImageProps) {
   const imgSrcGenerator = (
     imageAttribute: ImageProps["attribute"],
     imageType: ImageProps["type"]
@@ -23,7 +24,9 @@ function PanelImage({ attribute, type }: ImageProps) {
 
   return (
     <img
-      src={require(`${imgSrcGenerator(attribute, type)}`)}
+      src={
+        customUrl ? customUrl : require(`${imgSrcGenerator(attribute, type)}`)
+      }
       alt={`${attribute} ${typeCase()}`}
       className="object-cover rounded-lg"
     />

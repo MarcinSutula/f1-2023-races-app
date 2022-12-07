@@ -1,4 +1,4 @@
-type PanelTitleProps = {
+export type PanelTitleProps = {
   title: string;
 };
 
