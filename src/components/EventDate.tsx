@@ -1,5 +1,5 @@
 import { RaceObj } from "../race-types";
-import { timestampFormatter } from "../utils";
+import { timestampFormatter } from "../utils/utils";
 
 export type EventDateProps = {
   startTimestamp: RaceObj["start_date"];

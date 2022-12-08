@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { RacesArrContext, ViewContext } from "../App";
 import { RaceObj } from "../race-types";
-import { viewGoToRace } from "../utils";
+import { viewGoToRace } from "../utils/map-utils";
 import NavBtn from "./NavBtn";
 
 type NavigationBtnsProps = {

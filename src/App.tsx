@@ -3,13 +3,10 @@ import DetailsPanel from "./components/DetailsPanel";
 import { useEffect, createContext, useRef } from "react";
 import React from "react";
 import { RaceObj } from "./race-types";
-import {
-  initMapView,
-  fetchAllRaces,
-  getRacesLayer,
-  viewGoToRace,
-} from "./utils";
+import { initMapView, getRacesLayer, viewGoToRace } from "./utils/map-utils";
+import { fetchAllRaces } from "./utils/utils";
 import MapSpinner from "./components/MapSpinner";
+import Graphic from "@arcgis/core/Graphic";
 
 export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
@@ -60,6 +57,52 @@ function App() {
         if (!racesLayer) throw new Error("Problem with getting races layer");
         const racesArr = await fetchAllRaces(racesLayer);
         setRacesArr(racesArr);
+
+        /////test
+
+        const pkt1 = [
+          racesArr[0].geometry.get("longitude"),
+          racesArr[0].geometry.get("latitude"),
+        ];
+        const pkt2 = [
+          racesArr[1].geometry.get("longitude"),
+          racesArr[1].geometry.get("latitude"),
+        ];
+        const polyline = {
+          type: "polyline",
+          paths: [pkt1, pkt2],
+        };
+        const polyline2 = {
+          type: "polyline", // autocasts as new Polyline()
+          paths: [
+            [-111.3, 52.68],
+            [-98, 49.5],
+          ],
+        };
+
+        const lineSymbol = {
+          type: "simple-line", // autocasts as SimpleLineSymbol()
+          color: [226, 119, 40],
+          width: 3,
+          
+        };
+
+        const lineAtt = {
+          Name: "Keystone Pipeline",
+          Owner: "TransCanada",
+          Length: "3,456 km",
+        };
+
+        const polylineGraphic = new Graphic({
+          // geometry: polyline as __esri.GeometryProperties,
+          geometry: polyline as __esri.GeometryProperties,
+          symbol: lineSymbol,
+          attributes: lineAtt,
+          popupTemplate: undefined,
+        });
+
+        newView.graphics.add(polylineGraphic);
+        //// test
         onMapClick(newView, racesArr);
       });
     } catch (err) {

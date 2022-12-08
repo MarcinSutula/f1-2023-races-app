@@ -7,7 +7,7 @@ import EventDate from "./EventDate";
 import RaceLocation from "./RaceLocation";
 import CircuitDetailsBtn from "./CircuitDetailsBtn";
 import RaceCounter from "./RaceCounter";
-import { lapRecordInfoFormatter } from "../utils";
+import { lapRecordInfoFormatter } from "../utils/utils";
 import PanelCard from "./PanelCard";
 
 type DetailsPanelProps = {
