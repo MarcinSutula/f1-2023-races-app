@@ -1,6 +1,7 @@
 import "./App.css";
 import DetailsPanel from "./components/DetailsPanel";
-import { useState, useEffect, createContext, useRef } from "react";
+import { useEffect, createContext, useRef } from "react";
+import React from "react";
 import { RaceObj } from "./race-types";
 import {
   initMapView,
@@ -8,23 +9,22 @@ import {
   getRacesLayer,
   viewGoToRace,
 } from "./utils";
-import MapView from "@arcgis/core/views/MapView";
 import MapSpinner from "./components/MapSpinner";
 
-export const ViewContext = createContext<MapView | undefined>(undefined);
+export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
 
 function App() {
   const mapDiv = useRef<HTMLDivElement>(null);
 
-  const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
-  const [view, setView] = useState<MapView>();
-  const [racesArr, setRacesArr] = useState<RaceObj[] | undefined>();
+  const [clickedRaceObj, setClickedRaceObj] = React.useState<RaceObj>();
+  const [view, setView] = React.useState<__esri.MapView>();
+  const [racesArr, setRacesArr] = React.useState<RaceObj[] | undefined>();
   const oidRef = useRef<number>();
   const geometryRef = useRef<__esri.Geometry>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const onMapClick = (view: MapView, races: RaceObj[]): void => {
+  const onMapClick = (view: __esri.MapView, races: RaceObj[]): void => {
     view.on("click", async (event) => {
       if (isLoading) return;
       const response: __esri.HitTestResult = await view.hitTest(event);

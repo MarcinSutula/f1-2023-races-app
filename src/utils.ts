@@ -27,7 +27,9 @@ export const fetchAllRaces = async (
   return racesArr;
 };
 
-export const initMapView = (mapDivRef: RefObject<HTMLDivElement>): MapView => {
+export const initMapView = (
+  mapDivRef: RefObject<HTMLDivElement>
+): __esri.MapView => {
   const layer = new FeatureLayer({
     url: process.env.REACT_APP_FEATURELAYER_URL,
   });
@@ -53,7 +55,7 @@ export const initMapView = (mapDivRef: RefObject<HTMLDivElement>): MapView => {
 };
 
 export const getRacesLayer = (
-  view: MapView
+  view: __esri.MapView
 ): __esri.FeatureLayer | undefined => {
   const layers = (view.map.layers as any).items as __esri.FeatureLayer[];
   const racesLayer = layers.find((layer) =>
@@ -63,7 +65,7 @@ export const getRacesLayer = (
 };
 
 export const viewGoToRace = (
-  view: MapView,
+  view: __esri.MapView,
   raceGeometry: __esri.Geometry
 ): Promise<void> => {
   return view.goTo(

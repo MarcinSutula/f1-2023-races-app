@@ -16,8 +16,6 @@ function NavBtn({
   basicColor,
   size,
 }: NavBtnProps) {
-  //   const onClick = () => onClickHandler(mode);
-
   return (
     <button onClick={onClickHandler.bind("", mode)} disabled={disabled}>
       {mode === "back" ? (
