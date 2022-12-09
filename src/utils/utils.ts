@@ -19,8 +19,14 @@ export const fetchAllRaces = async (
 export const lapRecordFormatter = (
   lapRecordInSeconds: number | null
 ): string => {
-  if (!lapRecordInSeconds) return "0";
-
+  if (
+    !lapRecordInSeconds ||
+    lapRecordInSeconds < 0 ||
+    lapRecordInSeconds >= 3600
+  ) {
+    lapRecordInSeconds !== 0 && console.error("Invalid Lap Record");
+    return "0";
+  }
   const lapRecordStr = lapRecordInSeconds.toFixed(3).toString();
   let [secondsStr, miliSecondsStr] = lapRecordStr.split(".");
   let minutes = 0;
@@ -38,6 +44,11 @@ export const lapRecordFormatter = (
 
 export const timestampFormatter = (timestamp: EpochTimeStamp): string => {
   const date = new Date(timestamp);
+  const dateStr = date.toString();
+  if (dateStr === "Invalid Date") {
+    console.error(dateStr);
+    return dateStr;
+  }
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   return `${day}.${month}`;
