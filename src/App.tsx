@@ -46,7 +46,8 @@ function App() {
 
   useEffect(() => {
     try {
-      const newView = initMapView(mapDiv);
+      if (!mapDiv.current) return;
+      const newView = initMapView(mapDiv.current);
       newView.when(async function () {
         setView(newView);
         const racesLayer = getRacesLayer(newView);

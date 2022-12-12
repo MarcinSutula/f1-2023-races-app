@@ -11,9 +11,7 @@ import {
 } from "../config";
 import { RaceObj } from "../race-types";
 
-export const initMapView = (
-  mapDivRef: RefObject<HTMLDivElement>
-): __esri.MapView => {
+export const initMapView = (mapDiv: HTMLDivElement): __esri.MapView => {
   const layer = new FeatureLayer({
     url: process.env.REACT_APP_FEATURELAYER_URL,
   });
@@ -25,7 +23,7 @@ export const initMapView = (
     layers: [layer],
   });
   const newView = new MapView({
-    container: mapDivRef.current as HTMLDivElement,
+    container: mapDiv,
     map: webmap,
     constraints: {
       minScale: MIN_SCALE,

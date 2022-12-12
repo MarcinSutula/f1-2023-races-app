@@ -1,8 +1,11 @@
 export {};
 
-global.Crypto = jest.fn().mockImplementation(() => ({
-  uid: jest.fn(),
-}));
+// Connected to @arcgis/core/views/MapView
+global.crypto = jest.fn().mockImplementation(() => ({
+  randomUID: jest.fn(),
+  subtle: jest.fn(),
+  getRandomValues: jest.fn(),
+})) as any;
 
 // Called by @arcgis/core/widgetrs/support/widgetUtils.js
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
