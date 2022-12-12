@@ -50,15 +50,20 @@ export const getRacesLayer = (
 
 export const viewGoToRace = (
   view: __esri.MapView,
-  raceGeometry: __esri.Geometry
+  raceGeometry: __esri.Geometry,
+  animation: boolean = true,
+  zoom: boolean = true
 ): Promise<void> => {
-  return view.goTo(
-    { geometry: raceGeometry, zoom: GO_TO_RACE_ZOOM },
-    {
-      duration: GO_TO_RACE_ANIMATION_DURATION,
-      easing: GO_TO_RACE_ANIMATION_EASING,
-    }
-  );
+  const goToTarget: __esri.GoToTarget2D = {
+    geometry: raceGeometry,
+  };
+  if (zoom) goToTarget.zoom = GO_TO_RACE_ZOOM;
+  const goToOptions = {
+    duration: GO_TO_RACE_ANIMATION_DURATION,
+    easing: GO_TO_RACE_ANIMATION_EASING,
+  };
+
+  return view.goTo(goToTarget, animation ? goToOptions : undefined);
 };
 
 export const onRaceClickMapHandler = async (
@@ -72,8 +77,8 @@ export const onRaceClickMapHandler = async (
 ): Promise<[number, __esri.Geometry] | void> => {
   const { graphic } = response.results[0] as __esri.GraphicHit;
   const hitOid = graphic.attributes.OBJECTID;
-  if (hitOid === oidRef.current) {
-    await view.goTo({ geometry: geometryRef.current });
+  if (hitOid === oidRef.current && geometryRef.current) {
+    await viewGoToRace(view, geometryRef.current, false, false);
     return;
   }
   setIsLoading(true);
