@@ -13,9 +13,7 @@ export const racesSchema = yup
         country: yup.string().required(),
         race_date: yup
           .date()
-          .transform((_, val) => {
-            return new Date(val);
-          })
+          .transform((_, val) => new Date(val))
           .required(),
         circuit_length: yup.number().required().positive(),
         laps_num: yup.number().required().positive(),
@@ -24,9 +22,7 @@ export const racesSchema = yup
         drs_zones_num: yup.number().required().positive(),
         start_date: yup
           .date()
-          .transform((_, val) => {
-            return new Date(val);
-          })
+          .transform((_, val) => new Date(val))
           .required(),
         lap_record_owner: yup.string().nullable().defined(),
         lap_record_year: yup.number().nullable().defined(),
