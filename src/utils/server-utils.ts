@@ -7,6 +7,7 @@ export const fetchAllRaces = async (layer: __esri.FeatureLayer) => {
       where: `1=1`,
       returnGeometry: true,
       outFields: ["*"],
+      orderByFields: ["start_date ASC"],
     });
     if (!featureSet || !featureSet?.features)
       throw new Error("Problem with fetching");
@@ -20,7 +21,6 @@ export const fetchAllRaces = async (layer: __esri.FeatureLayer) => {
     if (!isResponseValid) {
       throw new Error("Wrong server response");
     }
-
     return racesResponse;
   } catch (err) {
     if (err instanceof Error) {
