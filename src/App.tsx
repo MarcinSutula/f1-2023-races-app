@@ -3,9 +3,10 @@ import DetailsPanel from "./components/DetailsPanel";
 import { useEffect, createContext, useRef } from "react";
 import React from "react";
 import { RaceObj } from "./race-types";
-import { initMapView, getRacesLayer, viewGoToRace } from "./utils/map-utils";
+import { initMapView, getRacesLayer } from "./utils/map-utils";
 import { fetchAllRaces } from "./utils/server-utils";
 import MapSpinner from "./components/MapSpinner";
+import { onRaceClickMapHandler } from "./utils/map-utils";
 
 export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
@@ -26,23 +27,19 @@ function App() {
       const response: __esri.HitTestResult = await view.hitTest(event);
 
       if (response.results.length > 1) {
-        const { graphic } = response.results[0] as __esri.GraphicHit;
-        const hitOid = graphic.attributes.OBJECTID;
-        if (hitOid === oidRef.current) {
-          await view.goTo({ geometry: geometryRef.current });
-          return;
+        const hitData = await onRaceClickMapHandler(
+          view,
+          response,
+          oidRef,
+          geometryRef,
+          races,
+          setIsLoading,
+          setClickedRaceObj
+        );
+        if (hitData) {
+          oidRef.current = hitData[0];
+          geometryRef.current = hitData[1];
         }
-        setIsLoading(true);
-        oidRef.current = hitOid;
-        const foundRace = races.find((race) => race.OBJECTID === hitOid);
-        if (!foundRace) {
-          setIsLoading(false);
-          throw new Error("Problem with finding matching race");
-        }
-        await viewGoToRace(view, foundRace.geometry);
-        setClickedRaceObj(foundRace);
-        geometryRef.current = foundRace.geometry;
-        setIsLoading(false);
       }
     });
   };

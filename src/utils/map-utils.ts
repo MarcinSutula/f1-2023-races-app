@@ -9,6 +9,7 @@ import {
   MAX_SCALE,
   MIN_SCALE,
 } from "../config";
+import { RaceObj } from "../race-types";
 
 export const initMapView = (
   mapDivRef: RefObject<HTMLDivElement>
@@ -58,4 +59,31 @@ export const viewGoToRace = (
       easing: GO_TO_RACE_ANIMATION_EASING,
     }
   );
+};
+
+export const onRaceClickMapHandler = async (
+  view: __esri.MapView,
+  response: __esri.HitTestResult,
+  oidRef: RefObject<number | undefined>,
+  geometryRef: RefObject<__esri.Geometry | undefined>,
+  races: RaceObj[],
+  setIsLoading: (a: boolean) => void,
+  setClickedRaceObj: (a: RaceObj) => void
+): Promise<[number, __esri.Geometry] | void> => {
+  const { graphic } = response.results[0] as __esri.GraphicHit;
+  const hitOid = graphic.attributes.OBJECTID;
+  if (hitOid === oidRef.current) {
+    await view.goTo({ geometry: geometryRef.current });
+    return;
+  }
+  setIsLoading(true);
+  const foundRace = races.find((race) => race.OBJECTID === hitOid);
+  if (!foundRace) {
+    setIsLoading(false);
+    throw new Error("Problem with finding matching race");
+  }
+  await viewGoToRace(view, foundRace.geometry);
+  setClickedRaceObj(foundRace);
+  setIsLoading(false);
+  return [hitOid, foundRace.geometry];
 };
