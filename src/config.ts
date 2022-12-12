@@ -7,3 +7,6 @@ export const GO_TO_RACE_ZOOM: number = 7;
 export const GO_TO_RACE_ANIMATION_DURATION: __esri.GoToOptions2D["duration"] = 1250;
 export const GO_TO_RACE_ANIMATION_EASING: __esri.GoToOptions2D["easing"] =
   "ease-in-out";
+
+//Server
+export const RACES_NUM: number = 24;

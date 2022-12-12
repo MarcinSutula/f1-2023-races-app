@@ -1,20 +1,3 @@
-import { RaceObj } from "../race-types";
-
-export const fetchAllRaces = async (
-  layer: __esri.FeatureLayer
-): Promise<RaceObj[]> => {
-  const featureSet: __esri.FeatureSet = await layer.queryFeatures({
-    where: `1=1`,
-    returnGeometry: true,
-    outFields: ["*"],
-  });
-  if (!featureSet || !featureSet?.features)
-    throw new Error("Problem with fetching");
-  const racesArr: RaceObj[] = featureSet.features.map((feature) => {
-    return { ...feature.attributes, geometry: feature.geometry };
-  });
-  return racesArr;
-};
 
 export const lapRecordFormatter = (
   lapRecordInSeconds: number | null
