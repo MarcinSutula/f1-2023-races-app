@@ -7,7 +7,7 @@ global.crypto = jest.fn().mockImplementation(() => ({
   getRandomValues: jest.fn(),
 })) as any;
 
-// Called by @arcgis/core/widgetrs/support/widgetUtils.js
+// Called by @arcgis/core/widgets/support/widgetUtils.js
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),

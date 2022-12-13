@@ -1,5 +1,5 @@
 // import App from "./App";
-import { render, screen } from "@testing-library/react";
+//import { render, screen } from "@testing-library/react";
 // import Map from "@arcgis/core/Map";
 // import MapView from "@arcgis/core/views/MapView";
 // import { ViewContext, RacesArrContext } from "./App";
@@ -9,7 +9,7 @@ import { render, screen } from "@testing-library/react";
 //   smallDataRaceObj,
 // } from "./stories/testData";
 // import React from "react";
-
+export {};
 // jest.mock("@arcgis/core/views/MapView");
 // jest.mock("@arcgis/core/Map");
 // // jest.mock("@arcgis/core/layers/FeatureLayer");

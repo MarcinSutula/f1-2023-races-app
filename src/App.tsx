@@ -1,6 +1,6 @@
 import "./App.css";
 import DetailsPanel from "./components/DetailsPanel";
-import { useEffect, createContext, useRef } from "react";
+import { useEffect, createContext } from "react";
 import React from "react";
 import { RaceObj } from "./race-types";
 import { initMapView, getRacesLayer } from "./utils/map-utils";
@@ -12,13 +12,12 @@ export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
 
 function App() {
-  const mapDiv = useRef<HTMLDivElement>(null);
-
+  const mapDiv = React.useRef<HTMLDivElement>(null);
   const [clickedRaceObj, setClickedRaceObj] = React.useState<RaceObj>();
   const [view, setView] = React.useState<__esri.MapView>();
   const [racesArr, setRacesArr] = React.useState<RaceObj[] | undefined>();
-  const oidRef = useRef<number>();
-  const geometryRef = useRef<__esri.Geometry>();
+  const oidRef = React.useRef<number>();
+  const geometryRef = React.useRef<__esri.Geometry>();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const onMapClick = (view: __esri.MapView, races: RaceObj[]): void => {

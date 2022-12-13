@@ -1,6 +1,7 @@
-import { render } from "@testing-library/react";
-import NavigationBtnsContainer from "./NavigationBtnsContainer";
-import { smallDataRaceObj } from "../stories/testData";
+// import { render } from "@testing-library/react";
+// import NavigationBtnsContainer from "./NavigationBtnsContainer";
+// import { smallDataRaceObj } from "../stories/testData";
+export {};
 
 test("nav btn container", () => {
   // render(
