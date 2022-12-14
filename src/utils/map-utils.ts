@@ -11,6 +11,16 @@ import {
 } from "../config";
 import { RaceObj } from "../race-types";
 
+type onRaceMapClickHandlerFnType = (
+  view: __esri.MapView,
+  response: __esri.HitTestResult,
+  oidRef: RefObject<number | undefined>,
+  geometryRef: RefObject<__esri.Geometry | undefined>,
+  races: RaceObj[],
+  setIsLoading: (isLoading: boolean) => void,
+  setClickedRaceObj: (raceObj: RaceObj) => void
+) => Promise<[number, __esri.Geometry] | void>;
+
 export const initMapView = (mapDiv: HTMLDivElement): __esri.MapView => {
   const layer = new FeatureLayer({
     url: process.env.REACT_APP_FEATURELAYER_URL,
@@ -64,15 +74,15 @@ export const viewGoToRace = (
   return view.goTo(goToTarget, animation ? goToOptions : undefined);
 };
 
-export const onRaceClickMapHandler = async (
-  view: __esri.MapView,
-  response: __esri.HitTestResult,
-  oidRef: RefObject<number | undefined>,
-  geometryRef: RefObject<__esri.Geometry | undefined>,
-  races: RaceObj[],
-  setIsLoading: (a: boolean) => void,
-  setClickedRaceObj: (a: RaceObj) => void
-): Promise<[number, __esri.Geometry] | void> => {
+export const onRaceClickMapHandler: onRaceMapClickHandlerFnType = async (
+  view,
+  response,
+  oidRef,
+  geometryRef,
+  races,
+  setIsLoading,
+  setClickedRaceObj
+) => {
   const { graphic } = response.results[0] as __esri.GraphicHit;
   const hitOid = graphic.attributes.OBJECTID;
   if (hitOid === oidRef.current && geometryRef.current) {

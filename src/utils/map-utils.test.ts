@@ -6,7 +6,7 @@ import {
   lackingDataRaceObj,
   largeDataRaceObj,
   smallDataRaceObj,
-} from "../stories/testData";
+} from "../testData";
 
 const goToMock = jest.fn();
 
@@ -28,9 +28,9 @@ describe("initMapView()", () => {
   test("initializes view and renders map with layer", () => {
     const container = document.createElement("div");
     initMapView(container);
-    expect(FeatureLayer).toHaveBeenCalled();
-    expect(WebMap).toHaveBeenCalled();
-    expect(MapView).toHaveBeenCalled();
+    expect(FeatureLayer).toBeCalled();
+    expect(WebMap).toBeCalled();
+    expect(MapView).toBeCalled();
   });
 });
 
@@ -62,10 +62,10 @@ describe("onRaceMapClickHandler()", () => {
     current: undefined,
   };
 
-  let setIsLoading = jest.fn();
-  let setClickedRaceObj = jest.fn();
+  let setIsLoading: jest.Mock;
+  let setClickedRaceObj: jest.Mock;
 
-  afterEach(() => {
+  beforeEach(() => {
     oidRef.current = undefined;
     geometryRef.current = undefined;
     setIsLoading = jest.fn();
@@ -83,8 +83,8 @@ describe("onRaceMapClickHandler()", () => {
       setIsLoading,
       setClickedRaceObj
     );
-    expect(setIsLoading).toHaveBeenCalledWith(true);
-    expect(setIsLoading).toHaveBeenLastCalledWith(false);
+    expect(setIsLoading).toBeCalledWith(true);
+    expect(setIsLoading).lastCalledWith(false);
   });
 
   test("switches between loading states and throws an error not having found a race in all races", async () => {
@@ -101,8 +101,8 @@ describe("onRaceMapClickHandler()", () => {
         setClickedRaceObj
       );
     }).rejects.toThrow();
-    expect(setIsLoading).toHaveBeenCalledWith(true);
-    expect(setIsLoading).toHaveBeenLastCalledWith(false);
+    expect(setIsLoading).toBeCalledWith(true);
+    expect(setIsLoading).lastCalledWith(false);
   });
 
   test("does not switch between loading states having selected the same race", async () => {
@@ -118,7 +118,7 @@ describe("onRaceMapClickHandler()", () => {
       setIsLoading,
       setClickedRaceObj
     );
-    expect(setIsLoading).not.toHaveBeenCalled();
+    expect(setIsLoading).not.toBeCalled();
   });
 
   test("goes to a race on map and selects it with callback, not having selected anything before", async () => {
@@ -132,8 +132,8 @@ describe("onRaceMapClickHandler()", () => {
       setClickedRaceObj
     );
 
-    expect(goToMock).toHaveBeenCalled();
-    expect(setClickedRaceObj).toHaveBeenCalledWith(largeDataRaceObj);
+    expect(goToMock).toBeCalled();
+    expect(setClickedRaceObj).lastCalledWith(largeDataRaceObj);
   });
 
   test("goes to a race on map and selects it with callback, having selected some other race before", async () => {
@@ -149,8 +149,8 @@ describe("onRaceMapClickHandler()", () => {
       setClickedRaceObj
     );
 
-    expect(goToMock).toHaveBeenCalled();
-    expect(setClickedRaceObj).toHaveBeenCalledWith(largeDataRaceObj);
+    expect(goToMock).toBeCalled();
+    expect(setClickedRaceObj).lastCalledWith(largeDataRaceObj);
   });
 
   test("goes to same race on map and does not select it with callback", async () => {
@@ -166,8 +166,8 @@ describe("onRaceMapClickHandler()", () => {
       setClickedRaceObj
     );
 
-    expect(goToMock).toHaveBeenCalled();
-    expect(setClickedRaceObj).not.toHaveBeenCalled();
+    expect(goToMock).toBeCalled();
+    expect(setClickedRaceObj).not.toBeCalled();
   });
 
   test("returns hit objectid and geometry if clicked new or different race", async () => {

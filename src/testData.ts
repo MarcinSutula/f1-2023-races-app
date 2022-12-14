@@ -1,4 +1,4 @@
-import { RaceObj } from "../race-types";
+import { RaceObj } from "./race-types";
 
 export const smallDataRaceObj = {
   OBJECTID: 12,

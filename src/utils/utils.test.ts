@@ -5,6 +5,18 @@ import {
 } from "./utils";
 
 const originalConsoleError = console.error;
+let consoleErrorSpy: jest.SpyInstance;
+
+const generateConsoleErrorSpy = () =>
+  jest.spyOn(console, "error").mockImplementation((message) => message);
+
+beforeEach(() => {
+  consoleErrorSpy = generateConsoleErrorSpy();
+});
+
+afterEach(() => {
+  console.error = originalConsoleError;
+});
 
 ////////////////lapRecordFormatter()//////////////////
 
@@ -20,29 +32,20 @@ const casesRecordUnder60 = [
   0.1, 0.00000000000000001, 5, 5.223, 25, 42.232424234234234234234242, 59.3,
 ];
 
-afterEach(() => {
-  console.error = originalConsoleError;
-});
-
 describe("lapRecordFormatter()", () => {
   test.each(casesReturn0WithConsoleError)(
     "returns '0' if lap null or < 0 or >= 3600 sec and shows console error",
     (arg: lapRecordInSeconds) => {
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
       const argFormatted = lapRecordFormatter(arg);
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toBeCalledTimes(1);
+      expect(consoleErrorSpy).toBeCalledWith("Invalid Lap Record");
       expect(argFormatted).toBe("0");
     }
   );
 
   test("returns '0' if lap is 0 and does not show console error", () => {
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
     const lapRecordZero = lapRecordFormatter(0);
-    expect(consoleSpy).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toBeCalled();
     expect(lapRecordZero).toBe("0");
   });
 
@@ -52,6 +55,7 @@ describe("lapRecordFormatter()", () => {
       const regex = /^\d{1,2}:\d{2}\.\d{3}$/;
       const argFormatted = lapRecordFormatter(arg);
       expect(argFormatted).toMatch(regex);
+      expect(consoleErrorSpy).not.toBeCalled();
     }
   );
 
@@ -61,6 +65,7 @@ describe("lapRecordFormatter()", () => {
       const regex = /^\d{2}\.\d{3}$/;
       const argFormatted = lapRecordFormatter(arg);
       expect(argFormatted).toMatch(regex);
+      expect(consoleErrorSpy).not.toBeCalled();
     }
   );
 });
@@ -82,11 +87,9 @@ describe("timestampFormatter()", () => {
   );
 
   test("returns 'Invalid Date' and shows console.error if given invalid timestamp", () => {
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
     const argFormatted = timestampFormatter(9999999999999999);
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Invalid Date");
     expect(argFormatted).toBe("Invalid Date");
   });
 });
@@ -96,8 +99,8 @@ describe("timestampFormatter()", () => {
 describe("lapRecordInfoFormatter()", () => {
   test("returns proper lap record info format", () => {
     const regex = /^[A-Za-z]+ [A-Za-z]+ [(]\d{4}[)]/;
-    const test = lapRecordInfoFormatter("Marcin Sutula", 2012, 70);
+    const testLapRecordInfo = lapRecordInfoFormatter("Elvis Presley", 2012, 70);
 
-    expect(test).toMatch(regex);
+    expect(testLapRecordInfo).toMatch(regex);
   });
 });

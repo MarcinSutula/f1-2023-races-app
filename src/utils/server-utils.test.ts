@@ -1,46 +1,40 @@
-import { largeDataRaceObj } from "../stories/testData";
+import { largeDataRaceObj } from "../testData";
 import { fetchAllRaces } from "./server-utils";
 import { BaseSchema } from "yup";
 
 const originalConsoleError = console.error;
-const originalyupIsValid = BaseSchema.prototype.isValid;
+const originalYupIsValid = BaseSchema.prototype.isValid;
+let yupIsValidSpy: jest.SpyInstance;
+let consoleErrorSpy: jest.SpyInstance;
+
+const generateYupIsValidSpy = () =>
+  jest
+    .spyOn(BaseSchema.prototype, "isValid")
+    .mockImplementation((racesResponse: object[]): Promise<boolean> => {
+      if (
+        !racesResponse ||
+        racesResponse.length < 1 ||
+        racesResponse[0].hasOwnProperty("randomAtr")
+      ) {
+        return Promise.resolve(false);
+      }
+
+      return Promise.resolve(true);
+    });
+
+const generateConsoleErrorSpy = () =>
+  jest.spyOn(console, "error").mockImplementation((message) => message);
+
+beforeEach(() => {
+  yupIsValidSpy = generateYupIsValidSpy();
+  consoleErrorSpy = generateConsoleErrorSpy();
+});
+afterEach(() => {
+  console.error = originalConsoleError;
+  BaseSchema.prototype.isValid = originalYupIsValid;
+});
 
 describe("fetchAllRaces()", () => {
-  let yupIsValidSpy = jest
-    .spyOn(BaseSchema.prototype, "isValid")
-    .mockImplementation((racesResponse: any): Promise<boolean> => {
-      const promise: Promise<boolean> = new Promise((res, rej) => {
-        if (!racesResponse || racesResponse.length < 1) rej(false);
-        res(true);
-      });
-      return promise;
-    });
-  let consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-
-  beforeEach(() => {
-    yupIsValidSpy = jest
-      .spyOn(BaseSchema.prototype, "isValid")
-      .mockImplementation((racesResponse: object[]): Promise<boolean> => {
-        const promise: Promise<boolean> = new Promise((res, rej) => {
-          if (
-            !racesResponse ||
-            racesResponse.length < 1 ||
-            racesResponse[0].hasOwnProperty("randomAtr")
-          )
-            rej(false);
-          res(true);
-        });
-        return promise;
-      });
-
-    consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    console.error = originalConsoleError;
-    BaseSchema.prototype.isValid = originalyupIsValid;
-  });
-
   test("returns races response array if server response was correct", async () => {
     const layer = {
       queryFeatures: () => {
@@ -54,12 +48,13 @@ describe("fetchAllRaces()", () => {
         };
       },
     };
+
     expect(await fetchAllRaces(layer as any)).toStrictEqual([largeDataRaceObj]);
     expect(yupIsValidSpy).toBeCalledTimes(1);
-    expect(consoleSpy).not.toBeCalled();
+    expect(consoleErrorSpy).not.toBeCalled();
   });
 
-  test("catches and shows console error if server request and so the response were incorrect", async () => {
+  test("catches and shows correct console error if server request and so the response were incorrect", async () => {
     const layer = {
       queryFeatures: () => {
         return {};
@@ -67,11 +62,12 @@ describe("fetchAllRaces()", () => {
     };
 
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
-    expect(consoleSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Problem with fetching");
     expect(yupIsValidSpy).not.toBeCalled();
   });
 
-  test("catches and shows console error if server response attributes were incorrect", async () => {
+  test("catches and shows correct console error if server response attributes were incorrect", async () => {
     const layer = {
       queryFeatures: () => {
         return {
@@ -84,9 +80,9 @@ describe("fetchAllRaces()", () => {
         };
       },
     };
-
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
-    expect(consoleSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Wrong server response");
     expect(yupIsValidSpy).toBeCalledTimes(1);
   });
 });

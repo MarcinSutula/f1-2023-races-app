@@ -1,5 +1,5 @@
 import { raceObjSchema, racesSchema } from "./racesSchema";
-import { largeDataRaceObj } from "../stories/testData";
+import { largeDataRaceObj } from "../testData";
 import { RACES_NUM } from "../config";
 
 describe("Yup Race Obj Schema", () => {
