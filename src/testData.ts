@@ -1,6 +1,6 @@
 import { RaceObj } from "./race-types";
 
-export const smallDataRaceObj = {
+export const testData2 = {
   OBJECTID: 12,
   name: "Red Bull Ring",
   city: "Spielberg",
@@ -24,7 +24,7 @@ export const smallDataRaceObj = {
   } as any,
 } as RaceObj;
 
-export const largeDataRaceObj = {
+export const testData1 = {
   OBJECTID: 10,
   name: "Circuit de Barcelona-Catalunya",
   city: "Barcelona",
@@ -48,7 +48,7 @@ export const largeDataRaceObj = {
   } as any,
 } as RaceObj;
 
-export const lackingDataRaceObj = {
+export const testData3 = {
   OBJECTID: 24,
   name: "Las Vegas Street Circuit",
   city: "Las Vegas",

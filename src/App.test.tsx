@@ -4,9 +4,9 @@
 // import MapView from "@arcgis/core/views/MapView";
 // import { ViewContext, RacesArrContext } from "./App";
 // import {
-//   lackingDataRaceObj,
-//   largeDataRaceObj,
-//   smallDataRaceObj,
+//   testData3,
+//   testData1,
+//   testData2,
 // } from "./stories/testData";
 // import React from "react";
 export {};
@@ -49,7 +49,7 @@ describe("App", () => {
 
     // const { container } = render(
     //   <RacesArrContext.Provider
-    //     value={[smallDataRaceObj, lackingDataRaceObj, largeDataRaceObj]}
+    //     value={[testData2, testData3, testData1]}
     //   >
     //     <ViewContext.Provider value={mockMapView}>
     //       <App />
@@ -59,7 +59,7 @@ describe("App", () => {
 
     // const setStateMock = jest.fn();
     // const useStateMock: any = (useState: any) => [
-    //   lackingDataRaceObj,
+    //   testData3,
     //   setStateMock,
     // ];
 

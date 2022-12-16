@@ -1,29 +1,36 @@
 import { useContext } from "react";
-import { RacesArrContext, ViewContext } from "../App";
+import {
+  RacesArrContext,
+  ViewContext,
+  UpdateCurrentlySelectedRace,
+} from "../App";
 import { RaceObj } from "../race-types";
 import { viewGoToRace } from "../utils/map-utils";
 import NavBtn from "./NavBtn";
 
 type NavigationBtnsProps = {
-  selectedRaceOid: RaceObj["OBJECTID"];
-  setSelectedRaceObj: (raceObj: RaceObj) => void;
+  clickedRaceOid: RaceObj["OBJECTID"];
+  setClickedRaceObj: (raceObj: RaceObj) => void;
   setIsLoading: (isLoading: boolean) => void;
   isLoading: boolean;
 };
 
 export type NavigationMode = "back" | "next";
 
-function NavigationBtns({
-  selectedRaceOid,
-  setSelectedRaceObj,
+function NavigationBtnsContainer({
+  clickedRaceOid,
+  setClickedRaceObj,
   setIsLoading,
   isLoading,
 }: NavigationBtnsProps) {
   const viewCtx = useContext(ViewContext);
   const racesArrCtx = useContext(RacesArrContext);
+  const updateCurrentlySelectedRaceCtx = useContext(
+    UpdateCurrentlySelectedRace
+  );
 
-  const isBackBtnDisabled = racesArrCtx?.at(0)?.OBJECTID === selectedRaceOid;
-  const isNextBtnDisabled = racesArrCtx?.at(-1)?.OBJECTID === selectedRaceOid;
+  const isBackBtnDisabled = racesArrCtx?.at(0)?.OBJECTID === clickedRaceOid;
+  const isNextBtnDisabled = racesArrCtx?.at(-1)?.OBJECTID === clickedRaceOid;
 
   const navigationHandler = async (mode: NavigationMode) => {
     try {
@@ -34,19 +41,24 @@ function NavigationBtns({
         throw new Error("Problem with initializing navigation");
       setIsLoading(true);
 
-      const selectedRaceIndex = racesArrCtx.findIndex(
-        (race) => race.OBJECTID === selectedRaceOid
+      const clickedRaceIndex = racesArrCtx.findIndex(
+        (race) => race.OBJECTID === clickedRaceOid
       );
-      if (selectedRaceIndex === -1) {
+      if (clickedRaceIndex === -1) {
         setIsLoading(false);
         throw new Error("Problem with finding selected race");
       }
       const followingRaceIndex =
-        mode === "next" ? selectedRaceIndex + 1 : selectedRaceIndex - 1;
+        mode === "next" ? clickedRaceIndex + 1 : clickedRaceIndex - 1;
 
       const followingRace = racesArrCtx[followingRaceIndex];
       await viewGoToRace(viewCtx, followingRace.geometry);
-      setSelectedRaceObj(followingRace);
+      setClickedRaceObj(followingRace);
+      updateCurrentlySelectedRaceCtx &&
+        updateCurrentlySelectedRaceCtx({
+          oid: followingRace.OBJECTID,
+          geometry: followingRace.geometry,
+        });
       setIsLoading(false);
     } catch (err) {
       setIsLoading(false);
@@ -78,4 +90,4 @@ function NavigationBtns({
   );
 }
 
-export default NavigationBtns;
+export default NavigationBtnsContainer;

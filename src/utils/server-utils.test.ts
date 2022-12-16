@@ -1,4 +1,4 @@
-import { largeDataRaceObj } from "../testData";
+import { testData1 } from "../testData";
 import { fetchAllRaces } from "./server-utils";
 import { BaseSchema } from "yup";
 
@@ -41,15 +41,15 @@ describe("fetchAllRaces()", () => {
         return {
           features: [
             {
-              attributes: { ...largeDataRaceObj },
-              geometry: largeDataRaceObj.geometry,
+              attributes: { ...testData1 },
+              geometry: testData1.geometry,
             },
           ],
         };
       },
     };
 
-    expect(await fetchAllRaces(layer as any)).toStrictEqual([largeDataRaceObj]);
+    expect(await fetchAllRaces(layer as any)).toStrictEqual([testData1]);
     expect(yupIsValidSpy).toBeCalledTimes(1);
     expect(consoleErrorSpy).not.toBeCalled();
   });

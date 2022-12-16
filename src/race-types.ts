@@ -14,3 +14,8 @@ export type RaceObj = {
   lap_record_owner: string | null;
   lap_record_year: number | null;
 };
+
+export type RaceRefObj = {
+  oid: RaceObj["OBJECTID"];
+  geometry: RaceObj["geometry"];
+};

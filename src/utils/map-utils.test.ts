@@ -3,10 +3,11 @@ import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import {
-  lackingDataRaceObj,
-  largeDataRaceObj,
-  smallDataRaceObj,
+  testData3,
+  testData1,
+  testData2,
 } from "../testData";
+import { RaceRefObj } from "../race-types";
 
 const goToMock = jest.fn();
 
@@ -37,28 +38,21 @@ describe("initMapView()", () => {
 describe("onRaceMapClickHandler()", () => {
   const container = document.createElement("div");
   const view = initMapView(container);
-  const response: any = {
+  const hitTestResponse: any = {
     results: [
       {
         graphic: {
           attributes: {
-            OBJECTID: largeDataRaceObj.OBJECTID,
+            OBJECTID: testData1.OBJECTID,
           },
         },
       },
     ],
   };
 
-  const races = [largeDataRaceObj, lackingDataRaceObj, smallDataRaceObj];
+  const races = [testData1, testData3, testData2];
 
-  const oidRef: {
-    current: number | undefined;
-  } = {
-    current: undefined,
-  };
-  const geometryRef: {
-    current: __esri.Geometry | undefined;
-  } = {
+  const raceRefObj: { current: RaceRefObj | undefined } = {
     current: undefined,
   };
 
@@ -66,19 +60,18 @@ describe("onRaceMapClickHandler()", () => {
   let setClickedRaceObj: jest.Mock;
 
   beforeEach(() => {
-    oidRef.current = undefined;
-    geometryRef.current = undefined;
+    raceRefObj.current = undefined;
     setIsLoading = jest.fn();
     setClickedRaceObj = jest.fn();
-    response.results[0].graphic.attributes.OBJECTID = largeDataRaceObj.OBJECTID;
+    hitTestResponse.results[0].graphic.attributes.OBJECTID =
+      testData1.OBJECTID;
   });
 
   test("switches between loading states having selected a different or new race", async () => {
     await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj
@@ -88,14 +81,13 @@ describe("onRaceMapClickHandler()", () => {
   });
 
   test("switches between loading states and throws an error not having found a race in all races", async () => {
-    response.results[0].graphic.attributes.OBJECTID = -1;
+    hitTestResponse.results[0].graphic.attributes.OBJECTID = -1;
 
     await expect(async () => {
       await onRaceClickMapHandler(
         view,
-        response,
-        oidRef,
-        geometryRef,
+        hitTestResponse,
+        raceRefObj,
         races,
         setIsLoading,
         setClickedRaceObj
@@ -106,14 +98,15 @@ describe("onRaceMapClickHandler()", () => {
   });
 
   test("does not switch between loading states having selected the same race", async () => {
-    oidRef.current = largeDataRaceObj.OBJECTID;
-    geometryRef.current = largeDataRaceObj.geometry;
+    raceRefObj.current = {
+      oid: testData1.OBJECTID,
+      geometry: testData1.geometry,
+    };
 
     await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj
@@ -124,43 +117,44 @@ describe("onRaceMapClickHandler()", () => {
   test("goes to a race on map and selects it with callback, not having selected anything before", async () => {
     await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj
     );
 
     expect(goToMock).toBeCalled();
-    expect(setClickedRaceObj).lastCalledWith(largeDataRaceObj);
+    expect(setClickedRaceObj).lastCalledWith(testData1);
   });
 
   test("goes to a race on map and selects it with callback, having selected some other race before", async () => {
-    oidRef.current = smallDataRaceObj.OBJECTID;
-    geometryRef.current = smallDataRaceObj.geometry;
+    raceRefObj.current = {
+      oid: testData2.OBJECTID,
+      geometry: testData2.geometry,
+    };
     await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj
     );
 
     expect(goToMock).toBeCalled();
-    expect(setClickedRaceObj).lastCalledWith(largeDataRaceObj);
+    expect(setClickedRaceObj).lastCalledWith(testData1);
   });
 
   test("goes to same race on map and does not select it with callback", async () => {
-    oidRef.current = largeDataRaceObj.OBJECTID;
-    geometryRef.current = largeDataRaceObj.geometry;
+    raceRefObj.current = {
+      oid: testData1.OBJECTID,
+      geometry: testData1.geometry,
+    };
     await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj
@@ -173,28 +167,28 @@ describe("onRaceMapClickHandler()", () => {
   test("returns hit objectid and geometry if clicked new or different race", async () => {
     const clickedRace = await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj
     );
 
-    expect(clickedRace).toStrictEqual([
-      largeDataRaceObj.OBJECTID,
-      largeDataRaceObj.geometry,
-    ]);
+    expect(clickedRace).toStrictEqual({
+      oid: testData1.OBJECTID,
+      geometry: testData1.geometry,
+    });
   });
 
   test("returns undefined if clicked same race", async () => {
-    oidRef.current = largeDataRaceObj.OBJECTID;
-    geometryRef.current = largeDataRaceObj.geometry;
+    raceRefObj.current = {
+      oid: testData1.OBJECTID,
+      geometry: testData1.geometry,
+    };
     const clickedRace = await onRaceClickMapHandler(
       view,
-      response,
-      oidRef,
-      geometryRef,
+      hitTestResponse,
+      raceRefObj,
       races,
       setIsLoading,
       setClickedRaceObj

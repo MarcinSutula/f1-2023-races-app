@@ -1,13 +1,13 @@
 // import { render } from "@testing-library/react";
 // import NavigationBtnsContainer from "./NavigationBtnsContainer";
-// import { smallDataRaceObj } from "../stories/testData";
+// import { testData2 } from "../stories/testData";
 export {};
 
 test("nav btn container", () => {
   // render(
   //   <NavigationBtnsContainer
   //     selectedRaceOid={1}
-  //     setSelectedRaceObj={(smallDataRaceObj) => {}}
+  //     setSelectedRaceObj={(testData2) => {}}
   //     isLoading={false}
   //     setIsLoading={(a: boolean) => {}}
   //   />

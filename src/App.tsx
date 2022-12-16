@@ -1,8 +1,7 @@
 import "./App.css";
 import DetailsPanel from "./components/DetailsPanel";
-import { useEffect, createContext } from "react";
-import React from "react";
-import { RaceObj } from "./race-types";
+import { useEffect, createContext, useRef, useState } from "react";
+import { RaceObj, RaceRefObj } from "./race-types";
 import { initMapView, getRacesLayer } from "./utils/map-utils";
 import { fetchAllRaces } from "./utils/server-utils";
 import MapSpinner from "./components/MapSpinner";
@@ -10,35 +9,36 @@ import { onRaceClickMapHandler } from "./utils/map-utils";
 
 export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
+export const UpdateCurrentlySelectedRace =
+  createContext<((raceRefObj: RaceRefObj) => void) | undefined>(undefined);
 
 function App() {
-  const mapDiv = React.useRef<HTMLDivElement>(null);
-  const [clickedRaceObj, setClickedRaceObj] = React.useState<RaceObj>();
-  const [view, setView] = React.useState<__esri.MapView>();
-  const [racesArr, setRacesArr] = React.useState<RaceObj[] | undefined>();
-  const oidRef = React.useRef<number>();
-  const geometryRef = React.useRef<__esri.Geometry>();
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const mapDiv = useRef<HTMLDivElement>(null);
+  const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
+  const [view, setView] = useState<__esri.MapView>();
+  const [racesArr, setRacesArr] = useState<RaceObj[] | undefined>();
+  const currentlySelectedRaceRef = useRef<RaceRefObj>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const updateCurrentlySelectedRace = (raceRefObj: RaceRefObj) => {
+    currentlySelectedRaceRef.current = raceRefObj;
+  };
 
   const onMapClick = (view: __esri.MapView, races: RaceObj[]): void => {
     view.on("click", async (event) => {
       if (isLoading) return;
-      const response: __esri.HitTestResult = await view.hitTest(event);
+      const hitTestResponse: __esri.HitTestResult = await view.hitTest(event);
 
-      if (response.results.length > 1) {
+      if (hitTestResponse.results.length > 1) {
         const hitData = await onRaceClickMapHandler(
           view,
-          response,
-          oidRef,
-          geometryRef,
+          hitTestResponse,
+          currentlySelectedRaceRef,
           races,
           setIsLoading,
           setClickedRaceObj
         );
-        if (hitData) {
-          oidRef.current = hitData[0];
-          geometryRef.current = hitData[1];
-        }
+        hitData && updateCurrentlySelectedRace(hitData);
       }
     });
   };
@@ -120,12 +120,16 @@ function App() {
       {clickedRaceObj && (
         <RacesArrContext.Provider value={racesArr}>
           <ViewContext.Provider value={view}>
-            <DetailsPanel
-              selectedRaceObj={clickedRaceObj}
-              setSelectedRaceObj={setClickedRaceObj}
-              setIsLoading={setIsLoading}
-              isLoading={isLoading}
-            />
+            <UpdateCurrentlySelectedRace.Provider
+              value={updateCurrentlySelectedRace}
+            >
+              <DetailsPanel
+                clickedRaceObj={clickedRaceObj}
+                setClickedRaceObj={setClickedRaceObj}
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
+              />
+            </UpdateCurrentlySelectedRace.Provider>
           </ViewContext.Provider>
         </RacesArrContext.Provider>
       )}

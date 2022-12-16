@@ -9,17 +9,16 @@ import {
   MAX_SCALE,
   MIN_SCALE,
 } from "../config";
-import { RaceObj } from "../race-types";
+import { RaceObj, RaceRefObj } from "../race-types";
 
 type onRaceMapClickHandlerFnType = (
   view: __esri.MapView,
-  response: __esri.HitTestResult,
-  oidRef: RefObject<number | undefined>,
-  geometryRef: RefObject<__esri.Geometry | undefined>,
+  hitTestResponse: __esri.HitTestResult,
+  currentlySelectedRaceRef: RefObject<RaceRefObj | undefined>,
   races: RaceObj[],
   setIsLoading: (isLoading: boolean) => void,
   setClickedRaceObj: (raceObj: RaceObj) => void
-) => Promise<[number, __esri.Geometry] | void>;
+) => Promise<RaceRefObj | void>;
 
 export const initMapView = (mapDiv: HTMLDivElement): __esri.MapView => {
   const layer = new FeatureLayer({
@@ -76,17 +75,24 @@ export const viewGoToRace = (
 
 export const onRaceClickMapHandler: onRaceMapClickHandlerFnType = async (
   view,
-  response,
-  oidRef,
-  geometryRef,
+  hitTestResponse,
+  currentlySelectedRaceRef,
   races,
   setIsLoading,
   setClickedRaceObj
 ) => {
-  const { graphic } = response.results[0] as __esri.GraphicHit;
+  const { graphic } = hitTestResponse.results[0] as __esri.GraphicHit;
   const hitOid = graphic.attributes.OBJECTID;
-  if (hitOid === oidRef.current && geometryRef.current) {
-    await viewGoToRace(view, geometryRef.current, false, false);
+  if (
+    currentlySelectedRaceRef.current &&
+    hitOid === currentlySelectedRaceRef.current.oid
+  ) {
+    await viewGoToRace(
+      view,
+      currentlySelectedRaceRef.current.geometry,
+      false,
+      false
+    );
     return;
   }
   setIsLoading(true);
@@ -98,5 +104,5 @@ export const onRaceClickMapHandler: onRaceMapClickHandlerFnType = async (
   await viewGoToRace(view, foundRace.geometry);
   setClickedRaceObj(foundRace);
   setIsLoading(false);
-  return [hitOid, foundRace.geometry];
+  return { oid: hitOid, geometry: foundRace.geometry };
 };
