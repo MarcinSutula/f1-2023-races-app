@@ -2,11 +2,7 @@ import { initMapView, onRaceClickMapHandler } from "./map-utils";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import {
-  testData3,
-  testData1,
-  testData2,
-} from "../testData";
+import { testData3, testData1, testData2 } from "../testData";
 import { RaceRefObj } from "../race-types";
 
 const goToMock = jest.fn();
@@ -37,7 +33,7 @@ describe("initMapView()", () => {
 
 describe("onRaceMapClickHandler()", () => {
   const container = document.createElement("div");
-  const view = initMapView(container);
+  const view = initMapView(container)[0];
   const hitTestResponse: any = {
     results: [
       {
@@ -63,8 +59,7 @@ describe("onRaceMapClickHandler()", () => {
     raceRefObj.current = undefined;
     setIsLoading = jest.fn();
     setClickedRaceObj = jest.fn();
-    hitTestResponse.results[0].graphic.attributes.OBJECTID =
-      testData1.OBJECTID;
+    hitTestResponse.results[0].graphic.attributes.OBJECTID = testData1.OBJECTID;
   });
 
   test("switches between loading states having selected a different or new race", async () => {

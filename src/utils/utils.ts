@@ -1,3 +1,4 @@
+import { RaceObj } from "../race-types";
 
 export const lapRecordFormatter = (
   lapRecordInSeconds: number | null
@@ -43,4 +44,25 @@ export const lapRecordInfoFormatter = (
   seconds: number
 ): string => {
   return `${owner} (${year}) ${lapRecordFormatter(seconds)}`;
+};
+
+export const getNextRace = (races: RaceObj[]): RaceObj | undefined => {
+  const nowTimestamp = new Date().getTime();
+
+  const nextRaceTimestamp = races.reduce(
+    (acc: RaceObj["race_date"], val: RaceObj) => {
+      const raceToNowDiff = val.race_date - nowTimestamp;
+      const prevRaceToNowDiff = acc - nowTimestamp;
+      if (acc === -1) return val.race_date;
+      return raceToNowDiff >= 0 && raceToNowDiff < prevRaceToNowDiff
+        ? val.race_date
+        : acc;
+    },
+    -1
+  );
+
+  const nextRace = races.find(
+    (race: RaceObj) => race.race_date === nextRaceTimestamp
+  );
+  return nextRace;
 };

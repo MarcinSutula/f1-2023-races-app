@@ -11,7 +11,7 @@ import {
 } from "../config";
 import { RaceObj, RaceRefObj } from "../race-types";
 
-type onRaceMapClickHandlerFnType = (
+type OnRaceMapClickHandlerFnType = (
   view: __esri.MapView,
   hitTestResponse: __esri.HitTestResult,
   currentlySelectedRaceRef: RefObject<RaceRefObj | undefined>,
@@ -20,11 +20,19 @@ type onRaceMapClickHandlerFnType = (
   setClickedRaceObj: (raceObj: RaceObj) => void
 ) => Promise<RaceRefObj | void>;
 
-export const initMapView = (mapDiv: HTMLDivElement): __esri.MapView => {
+type ViewGoToRaceFnType = (
+  view: __esri.MapView,
+  raceGeometry: __esri.Geometry,
+  animation?: boolean,
+  zoom?: boolean
+) => Promise<void>;
+
+export const initMapView = (
+  mapDiv: HTMLDivElement
+): [MapView, FeatureLayer] => {
   const layer = new FeatureLayer({
     url: process.env.REACT_APP_FEATURELAYER_URL,
   });
-
   const webmap = new WebMap({
     portalItem: {
       id: process.env.REACT_APP_BASEMAP_ID,
@@ -42,7 +50,7 @@ export const initMapView = (mapDiv: HTMLDivElement): __esri.MapView => {
     popup: undefined,
   });
 
-  return newView;
+  return [newView, layer];
 };
 
 export const getRacesLayer = (
@@ -55,12 +63,12 @@ export const getRacesLayer = (
   return racesLayer ? racesLayer : undefined;
 };
 
-export const viewGoToRace = (
-  view: __esri.MapView,
-  raceGeometry: __esri.Geometry,
-  animation: boolean = true,
-  zoom: boolean = true
-): Promise<void> => {
+export const viewGoToRace: ViewGoToRaceFnType = (
+  view,
+  raceGeometry,
+  animation = true,
+  zoom = true
+) => {
   const goToTarget: __esri.GoToTarget2D = {
     geometry: raceGeometry,
   };
@@ -73,7 +81,7 @@ export const viewGoToRace = (
   return view.goTo(goToTarget, animation ? goToOptions : undefined);
 };
 
-export const onRaceClickMapHandler: onRaceMapClickHandlerFnType = async (
+export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
   view,
   hitTestResponse,
   currentlySelectedRaceRef,
@@ -105,4 +113,48 @@ export const onRaceClickMapHandler: onRaceMapClickHandlerFnType = async (
   setClickedRaceObj(foundRace);
   setIsLoading(false);
   return { oid: hitOid, geometry: foundRace.geometry };
+};
+
+export const changeNextRaceSymbology = (
+  layer: FeatureLayer,
+  nextRace: RaceObj
+) => {
+  const arcadeExpression = `
+  var RaceOid = $feature.OBJECTID;
+  when(
+    RaceOid == ${nextRace.OBJECTID}, 1,
+    0
+  );
+  `;
+
+  const sizeVisualVariable = {
+    type: "size",
+    valueExpression: arcadeExpression,
+    valueExpressionTitle: "Size Value",
+    legendOptions: {
+      showLegend: false,
+    },
+    maxDataValue: 1,
+    maxSize: "46px",
+    minDataValue: 0,
+    minSize: "26px",
+  };
+
+  const opacityVisualVariable = {
+    type: "opacity",
+    valueExpression: arcadeExpression,
+    valueExpressionTitle: "Opacity Value",
+    legendOptions: {
+      showLegend: false,
+    },
+    stops: [
+      { value: 0, opacity: 0.7, label: "Not a next race" },
+      { value: 1, opacity: 1, label: "Next race" },
+    ],
+  };
+
+  (layer.renderer as any).visualVariables = [
+    sizeVisualVariable,
+    opacityVisualVariable,
+  ];
 };

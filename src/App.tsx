@@ -2,10 +2,15 @@ import "./App.css";
 import DetailsPanel from "./components/DetailsPanel";
 import { useEffect, createContext, useRef, useState } from "react";
 import { RaceObj, RaceRefObj } from "./race-types";
-import { initMapView, getRacesLayer } from "./utils/map-utils";
+import {
+  initMapView,
+  viewGoToRace,
+  changeNextRaceSymbology,
+} from "./utils/map-utils";
 import { fetchAllRaces } from "./utils/server-utils";
 import MapSpinner from "./components/MapSpinner";
 import { onRaceClickMapHandler } from "./utils/map-utils";
+import { getNextRace } from "./utils/utils";
 
 export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
@@ -44,71 +49,89 @@ function App() {
   };
 
   useEffect(() => {
-    try {
-      if (!mapDiv.current) return;
-      const newView = initMapView(mapDiv.current);
-      newView.when(async function () {
-        setView(newView);
-        const racesLayer = getRacesLayer(newView);
-        if (!racesLayer) throw new Error("Problem with getting races layer");
-        const racesArr = await fetchAllRaces(racesLayer);
-        if (!racesArr) return;
-        setRacesArr(racesArr);
+    (async () => {
+      try {
+        if (!mapDiv.current) throw new Error("Could not locate map div");
+        setIsLoading(true);
+        const [newView, layer] = initMapView(mapDiv.current);
 
-        /////test
+        const racesArr = await fetchAllRaces(layer);
+        if (!racesArr) {
+          setIsLoading(false);
+          throw new Error("Problem with fetching races");
+        }
+        const nextRace = getNextRace(racesArr);
+        nextRace && changeNextRaceSymbology(layer, nextRace);
+        newView.when(async function () {
+          if (nextRace) {
+            setClickedRaceObj(nextRace);
+            updateCurrentlySelectedRace({
+              oid: nextRace.OBJECTID,
+              geometry: nextRace.geometry,
+            });
+            await viewGoToRace(newView, nextRace.geometry);
+          }
+          setView(newView);
+          setRacesArr(racesArr);
 
-        // const pkt1 = [
-        //   racesArr[0].geometry.get("longitude"),
-        //   racesArr[0].geometry.get("latitude"),
-        // ];
-        // const pkt2 = [
-        //   racesArr[1].geometry.get("longitude"),
-        //   racesArr[1].geometry.get("latitude"),
-        // ];
-        // const polyline = {
-        //   type: "polyline",
-        //   paths: [pkt1, pkt2],
-        // };
-        // const polyline2 = {
-        //   type: "polyline", // autocasts as new Polyline()
-        //   paths: [
-        //     [-111.3, 52.68],
-        //     [-98, 49.5],
-        //   ],
-        // };
+          /////test
 
-        // const lineSymbol = {
-        //   type: "simple-line", // autocasts as SimpleLineSymbol()
-        //   color: [226, 119, 40],
-        //   width: 3,
-        // };
+          // const pkt1 = [
+          //   racesArr[0].geometry.get("longitude"),
+          //   racesArr[0].geometry.get("latitude"),
+          // ];
+          // const pkt2 = [
+          //   racesArr[1].geometry.get("longitude"),
+          //   racesArr[1].geometry.get("latitude"),
+          // ];
+          // const polyline = {
+          //   type: "polyline",
+          //   paths: [pkt1, pkt2],
+          // };
+          // const polyline2 = {
+          //   type: "polyline", // autocasts as new Polyline()
+          //   paths: [
+          //     [-111.3, 52.68],
+          //     [-98, 49.5],
+          //   ],
+          // };
 
-        // const lineAtt = {
-        //   Name: "Keystone Pipeline",
-        //   Owner: "TransCanada",
-        //   Length: "3,456 km",
-        // };
+          // const lineSymbol = {
+          //   type: "simple-line", // autocasts as SimpleLineSymbol()
+          //   color: [226, 119, 40],
+          //   width: 3,
+          // };
 
-        // const polylineGraphic = new Graphic({
-        //   // geometry: polyline as __esri.GeometryProperties,
-        //   geometry: polyline as __esri.GeometryProperties,
-        //   symbol: lineSymbol,
-        //   attributes: lineAtt,
-        //   popupTemplate: undefined,
-        // });
+          // const lineAtt = {
+          //   Name: "Keystone Pipeline",
+          //   Owner: "TransCanada",
+          //   Length: "3,456 km",
+          // };
 
-        // newView.graphics.add(polylineGraphic);
-        //// test
-        onMapClick(newView, racesArr);
-      });
-    } catch (err) {
-      setIsLoading(false);
-      if (err instanceof Error) {
-        console.error(err.message);
-        return;
+          // const polylineGraphic = new Graphic({
+          //   // geometry: polyline as __esri.GeometryProperties,
+          //   geometry: polyline as __esri.GeometryProperties,
+          //   symbol: lineSymbol,
+          //   attributes: lineAtt,
+          //   popupTemplate: undefined,
+          // });
+
+          // newView.graphics.add(polylineGraphic);
+          //// test
+
+          onMapClick(newView, racesArr);
+          setIsLoading(false);
+        });
+      } catch (err) {
+        setIsLoading(false);
+        if (err instanceof Error) {
+          console.error(err.message);
+          return;
+        }
+        console.error("Unexpected error", err);
       }
-      console.error("Unexpected error", err);
-    }
+    })();
+
     return () => {
       view?.destroy();
     };
@@ -117,7 +140,7 @@ function App() {
   return (
     <div className="flex h-screen bg-black">
       <div className="h-screen w-screen p-0 m-0" ref={mapDiv}></div>
-      {clickedRaceObj && (
+      {clickedRaceObj && view && (
         <RacesArrContext.Provider value={racesArr}>
           <ViewContext.Provider value={view}>
             <UpdateCurrentlySelectedRace.Provider
