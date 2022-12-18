@@ -1,5 +1,6 @@
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
+import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { RefObject } from "react";
 import {
@@ -10,6 +11,7 @@ import {
   MIN_SCALE,
 } from "../config";
 import { RaceObj, RaceRefObj } from "../race-types";
+import { getGeometry } from "./utils";
 
 type OnRaceMapClickHandlerFnType = (
   view: __esri.MapView,
@@ -90,8 +92,11 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
   setClickedRaceObj
 ) => {
   const { graphic } = hitTestResponse.results[0] as __esri.GraphicHit;
-  const hitOid = graphic.attributes.OBJECTID;
-  if (
+  const hitOid = graphic.attributes?.OBJECTID;
+
+  if (!hitOid) {
+    return;
+  } else if (
     currentlySelectedRaceRef.current &&
     hitOid === currentlySelectedRaceRef.current.oid
   ) {
@@ -158,3 +163,47 @@ export const changeNextRaceSymbology = (
     opacityVisualVariable,
   ];
 };
+
+export const createPolylineBetweenRaces = (
+  previousRace: RaceObj,
+  nextRace: RaceObj
+): Graphic => {
+  const startPoint = getGeometry(previousRace.geometry, "lng,lat");
+  const endPoint = getGeometry(nextRace.geometry, "lng,lat");
+
+  const polyline = {
+    type: "polyline",
+    paths: [startPoint, endPoint],
+  };
+
+  const lineSymbol = {
+    type: "simple-line",
+    style: "short-dot",
+    cap: "round",
+    color: [255, 255, 255, 0.5],
+    width: 2,
+  };
+
+  const polylineGraphic = new Graphic({
+    geometry: polyline as __esri.GeometryProperties,
+    symbol: lineSymbol,
+    popupTemplate: undefined,
+  });
+
+  return polylineGraphic;
+};
+
+// export const calculatePointAlongLine = (start: any, end: any, ratio: any) => {
+//   const geoDistance = geodesicUtils.geodesicDistance(
+//     new Point(webMercatorUtils.webMercatorToGeographic(start)),
+//     new Point(webMercatorUtils.webMercatorToGeographic(end)),
+//     "meters"
+//   );
+//   if (!geoDistance || !geoDistance.azimuth || !geoDistance.distance) return;
+//   const pointFromDistance = geodesicUtils.pointFromDistance(
+//     new Point(start),
+//     geoDistance.distance * ratio,
+//     geoDistance.azimuth
+//   );
+//   return [pointFromDistance, geoDistance.azimuth];
+// };

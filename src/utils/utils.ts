@@ -48,6 +48,8 @@ export const lapRecordInfoFormatter = (
 
 export const getNextRace = (races: RaceObj[]): RaceObj | undefined => {
   const nowTimestamp = new Date().getTime();
+  const lastRace = races.at(-1);
+  if (lastRace && nowTimestamp > lastRace.race_date) return;
 
   const nextRaceTimestamp = races.reduce(
     (acc: RaceObj["race_date"], val: RaceObj) => {
@@ -66,3 +68,11 @@ export const getNextRace = (races: RaceObj[]): RaceObj | undefined => {
   );
   return nextRace;
 };
+
+export const getGeometry = (
+  geometry: __esri.Geometry,
+  mode: "lng,lat" | "x,y"
+): [number, number] => [
+  geometry.get(mode === "lng,lat" ? "longitude" : "x"),
+  geometry.get(mode === "lng,lat" ? "latitude" : "y"),
+];

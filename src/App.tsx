@@ -6,6 +6,7 @@ import {
   initMapView,
   viewGoToRace,
   changeNextRaceSymbology,
+  createPolylineBetweenRaces,
 } from "./utils/map-utils";
 import { fetchAllRaces } from "./utils/server-utils";
 import MapSpinner from "./components/MapSpinner";
@@ -54,15 +55,16 @@ function App() {
         if (!mapDiv.current) throw new Error("Could not locate map div");
         setIsLoading(true);
         const [newView, layer] = initMapView(mapDiv.current);
-
         const racesArr = await fetchAllRaces(layer);
         if (!racesArr) {
           setIsLoading(false);
           throw new Error("Problem with fetching races");
         }
+        setRacesArr(racesArr);
         const nextRace = getNextRace(racesArr);
         nextRace && changeNextRaceSymbology(layer, nextRace);
         newView.when(async function () {
+          setView(newView);
           if (nextRace) {
             setClickedRaceObj(nextRace);
             updateCurrentlySelectedRace({
@@ -70,55 +72,17 @@ function App() {
               geometry: nextRace.geometry,
             });
             await viewGoToRace(newView, nextRace.geometry);
+            const nextRaceIndex = racesArr.findIndex(
+              (race) => race.OBJECTID === nextRace.OBJECTID
+            );
+            if (nextRaceIndex !== 0) {
+              const line = createPolylineBetweenRaces(
+                racesArr[nextRaceIndex - 1],
+                nextRace
+              );
+              newView.graphics.add(line);
+            }
           }
-          setView(newView);
-          setRacesArr(racesArr);
-
-          /////test
-
-          // const pkt1 = [
-          //   racesArr[0].geometry.get("longitude"),
-          //   racesArr[0].geometry.get("latitude"),
-          // ];
-          // const pkt2 = [
-          //   racesArr[1].geometry.get("longitude"),
-          //   racesArr[1].geometry.get("latitude"),
-          // ];
-          // const polyline = {
-          //   type: "polyline",
-          //   paths: [pkt1, pkt2],
-          // };
-          // const polyline2 = {
-          //   type: "polyline", // autocasts as new Polyline()
-          //   paths: [
-          //     [-111.3, 52.68],
-          //     [-98, 49.5],
-          //   ],
-          // };
-
-          // const lineSymbol = {
-          //   type: "simple-line", // autocasts as SimpleLineSymbol()
-          //   color: [226, 119, 40],
-          //   width: 3,
-          // };
-
-          // const lineAtt = {
-          //   Name: "Keystone Pipeline",
-          //   Owner: "TransCanada",
-          //   Length: "3,456 km",
-          // };
-
-          // const polylineGraphic = new Graphic({
-          //   // geometry: polyline as __esri.GeometryProperties,
-          //   geometry: polyline as __esri.GeometryProperties,
-          //   symbol: lineSymbol,
-          //   attributes: lineAtt,
-          //   popupTemplate: undefined,
-          // });
-
-          // newView.graphics.add(polylineGraphic);
-          //// test
-
           onMapClick(newView, racesArr);
           setIsLoading(false);
         });
