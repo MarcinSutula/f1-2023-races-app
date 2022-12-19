@@ -30,7 +30,7 @@ function App() {
     currentlySelectedRaceRef.current = raceRefObj;
   };
 
-  const onMapClick = (view: __esri.MapView, races: RaceObj[]): void => {
+  const onMapClickHandler = (view: __esri.MapView, races: RaceObj[]): void => {
     view.on("click", async (event) => {
       if (isLoading) return;
       const hitTestResponse: __esri.HitTestResult = await view.hitTest(event);
@@ -49,6 +49,34 @@ function App() {
     });
   };
 
+  const onViewInstanceCreated = async (
+    view: __esri.MapView,
+    racesArray: RaceObj[],
+    nextRace: RaceObj | undefined
+  ) => {
+    setView(view);
+    if (nextRace) {
+      setClickedRaceObj(nextRace);
+      updateCurrentlySelectedRace({
+        oid: nextRace.OBJECTID,
+        geometry: nextRace.geometry,
+      });
+      await viewGoToRace(view, nextRace.geometry);
+      const nextRaceIndex = racesArray.findIndex(
+        (race) => race.OBJECTID === nextRace.OBJECTID
+      );
+      if (nextRaceIndex !== 0) {
+        const line = createPolylineBetweenRaces(
+          racesArray[nextRaceIndex - 1],
+          nextRace
+        );
+        view.graphics.add(line);
+      }
+    }
+    onMapClickHandler(view, racesArray);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -63,28 +91,9 @@ function App() {
         setRacesArr(racesArr);
         const nextRace = getNextRace(racesArr);
         nextRace && changeNextRaceSymbology(layer, nextRace);
-        newView.when(async function () {
-          setView(newView);
-          if (nextRace) {
-            setClickedRaceObj(nextRace);
-            updateCurrentlySelectedRace({
-              oid: nextRace.OBJECTID,
-              geometry: nextRace.geometry,
-            });
-            await viewGoToRace(newView, nextRace.geometry);
-            const nextRaceIndex = racesArr.findIndex(
-              (race) => race.OBJECTID === nextRace.OBJECTID
-            );
-            if (nextRaceIndex !== 0) {
-              const line = createPolylineBetweenRaces(
-                racesArr[nextRaceIndex - 1],
-                nextRace
-              );
-              newView.graphics.add(line);
-            }
-          }
-          onMapClick(newView, racesArr);
-          setIsLoading(false);
+
+        newView.when(function () {
+          onViewInstanceCreated(newView, racesArr, nextRace);
         });
       } catch (err) {
         setIsLoading(false);
