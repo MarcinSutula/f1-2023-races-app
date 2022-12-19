@@ -1,4 +1,10 @@
-import { initMapView, onRaceClickMapHandler } from "./map-utils";
+import {
+  initMapView,
+  onRaceClickMapHandler,
+  changeNextRaceSymbology,
+  createPolylineBetweenRaces,
+} from "./map-utils";
+import * as utils from "./utils";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -24,10 +30,12 @@ jest.mock("@arcgis/core/layers/FeatureLayer", () =>
 describe("initMapView()", () => {
   test("initializes view and renders map with layer", () => {
     const container = document.createElement("div");
-    initMapView(container);
+    const mapObjects = initMapView(container);
     expect(FeatureLayer).toBeCalled();
     expect(WebMap).toBeCalled();
     expect(MapView).toBeCalled();
+    expect(mapObjects).toBeDefined();
+    expect(mapObjects.length).toBe(2);
   });
 });
 
@@ -60,6 +68,21 @@ describe("onRaceMapClickHandler()", () => {
     setIsLoading = jest.fn();
     setClickedRaceObj = jest.fn();
     hitTestResponse.results[0].graphic.attributes.OBJECTID = testData1.OBJECTID;
+  });
+
+  test("returns undefined having selected not an object", async () => {
+    hitTestResponse.results[0].graphic.attributes = {};
+
+    const clickedRace = await onRaceClickMapHandler(
+      view,
+      hitTestResponse,
+      raceRefObj,
+      races,
+      setIsLoading,
+      setClickedRaceObj
+    );
+
+    expect(clickedRace).toBeUndefined();
   });
 
   test("switches between loading states having selected a different or new race", async () => {
@@ -190,5 +213,30 @@ describe("onRaceMapClickHandler()", () => {
     );
 
     expect(clickedRace).toBeUndefined();
+  });
+});
+
+describe("changeNextRaceSymbology()", () => {
+  test("sets Visual Variables on layers renderer", () => {
+    const layer = {
+      renderer: {},
+    } as any;
+
+    changeNextRaceSymbology(layer, testData1);
+    expect(layer.renderer.visualVariables).toBeDefined();
+    expect(layer.renderer.visualVariables.length).toBe(2);
+  });
+});
+
+describe("createPolylineBetweenRaces", () => {
+  const getGeometrySpy = jest.spyOn(utils, "getGeometry");
+
+  test("creates a polyline between given two race objects", () => {
+    const polyline = createPolylineBetweenRaces(testData1, testData2);
+    expect(getGeometrySpy).toBeCalledTimes(2);
+    expect(getGeometrySpy).toBeCalledWith(expect.anything(), "lng,lat");
+    expect(polyline.geometry).toBeDefined();
+    expect(polyline.symbol).toBeDefined();
+    expect(polyline.geometry.type).toBe("polyline");
   });
 });

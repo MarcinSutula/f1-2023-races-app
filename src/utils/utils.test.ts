@@ -20,21 +20,10 @@ afterEach(() => {
   console.error = originalConsoleError;
 });
 
-////////////////lapRecordFormatter()//////////////////
-
 type lapRecordInSeconds = number | null;
-//"returns '0' if lap is 0 or null or < 0 or >= 3600 sec"
-const casesReturn0WithConsoleError = [null, -1, 99999999999999999, 3600];
-//"returns proper lap record format when lap is >= 60 sec and < 3600 sec"
-const casesRecordOver60Under3600 = [
-  70, 121.12, 242.12312321312321312313, 60, 60.99999999999999999999999999, 3599,
-];
-//"returns proper lap record format when lap is < 60 sec"
-const casesRecordUnder60 = [
-  0.1, 0.00000000000000001, 5, 5.223, 25, 42.232424234234234234234242, 59.3,
-];
 
 describe("lapRecordFormatter()", () => {
+  const casesReturn0WithConsoleError = [null, -1, 99999999999999999, 3600];
   test.each(casesReturn0WithConsoleError)(
     "returns '0' if lap null or < 0 or >= 3600 sec and shows console error",
     (arg: lapRecordInSeconds) => {
@@ -51,6 +40,11 @@ describe("lapRecordFormatter()", () => {
     expect(lapRecordZero).toBe("0");
   });
 
+  const casesRecordOver60Under3600 = [
+    70, 121.12, 242.12312321312321312313, 60, 60.99999999999999999999999999,
+    3599,
+  ];
+
   test.each(casesRecordOver60Under3600)(
     "returns proper lap record format when lap is >= 60 sec and < 3600 sec",
     (arg: lapRecordInSeconds) => {
@@ -60,6 +54,10 @@ describe("lapRecordFormatter()", () => {
       expect(consoleErrorSpy).not.toBeCalled();
     }
   );
+
+  const casesRecordUnder60 = [
+    0.1, 0.00000000000000001, 5, 5.223, 25, 42.232424234234234234234242, 59.3,
+  ];
 
   test.each(casesRecordUnder60)(
     "returns proper lap record format when lap is < 60 sec",
@@ -72,9 +70,8 @@ describe("lapRecordFormatter()", () => {
   );
 });
 
-const casesCorrectTimestamp = [0, 1685836800000, 1700265600000];
-
 describe("timestampFormatter()", () => {
+  const casesCorrectTimestamp = [0, 1685836800000, 1700265600000];
   test.each(casesCorrectTimestamp)(
     "returns proper date format given correct timestamp",
     (arg: EpochTimeStamp) => {

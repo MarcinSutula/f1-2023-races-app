@@ -21,6 +21,11 @@ export const testData1 = {
     },
     x: 251283.79619999975,
     y: 5096643.108199999,
+    latitude: 251283.79619999975,
+    longitude: 5096643.108199999,
+    get: function (arg: "x" | "y" | "latitude" | "longitude") {
+      return this[arg];
+    },
   } as any,
 } as RaceObj;
 
@@ -45,6 +50,11 @@ export const testData2 = {
     },
     x: 1643644.2204999998,
     y: 5978080.698200002,
+    latitude: 251283.79619999975,
+    longitude: 5096643.108199999,
+    get: function (arg: "x" | "y" | "latitude" | "longitude") {
+      return this[arg];
+    },
   } as any,
 } as RaceObj;
 
@@ -69,5 +79,10 @@ export const testData3 = {
     },
     x: -12828910.678599998,
     y: 4328643.891100004,
+    latitude: 251283.79619999975,
+    longitude: 5096643.108199999,
+    get: function (arg: "x" | "y" | "latitude" | "longitude") {
+      return this[arg];
+    },
   } as any,
 } as RaceObj;
