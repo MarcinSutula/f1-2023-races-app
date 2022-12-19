@@ -2,7 +2,9 @@ import {
   lapRecordFormatter,
   timestampFormatter,
   lapRecordInfoFormatter,
+  getNextRace,
 } from "./utils";
+import { testData1, testData2, testData3 } from "../testData";
 
 const originalConsoleError = console.error;
 let consoleErrorSpy: jest.SpyInstance;
@@ -70,16 +72,12 @@ describe("lapRecordFormatter()", () => {
   );
 });
 
-////////////////timestampFormatter()//////////////////
-
-type timestamp = EpochTimeStamp;
-//"returns proper date format given correct timestamp" cases with 1 or 2 digit day or month formats
 const casesCorrectTimestamp = [0, 1685836800000, 1700265600000];
 
 describe("timestampFormatter()", () => {
   test.each(casesCorrectTimestamp)(
     "returns proper date format given correct timestamp",
-    (arg: timestamp) => {
+    (arg: EpochTimeStamp) => {
       const regex = /^\d{2}\.\d{2}$/;
       const argFormatted = timestampFormatter(arg);
       expect(argFormatted).toMatch(regex);
@@ -94,13 +92,55 @@ describe("timestampFormatter()", () => {
   });
 });
 
-///////////////////////lapRecordInfoFormatter//////////////////////
-
 describe("lapRecordInfoFormatter()", () => {
   test("returns proper lap record info format", () => {
     const regex = /^[A-Za-z]+ [A-Za-z]+ [(]\d{4}[)]/;
     const testLapRecordInfo = lapRecordInfoFormatter("Elvis Presley", 2012, 70);
 
     expect(testLapRecordInfo).toMatch(regex);
+  });
+});
+
+describe("getNextRace()", () => {
+  const racesArr = [testData1, testData2, testData3];
+  const RealDate = global.Date;
+
+  afterEach(() => {
+    global.Date = RealDate;
+  });
+
+  test("returns undefined if there is no next race/last race already passed", () => {
+    const testRacesArr = racesArr.map((race) => {
+      return {
+        ...race,
+        race_date: 1608332400000,
+      };
+    });
+
+    const nextRace = getNextRace(testRacesArr);
+    expect(nextRace).toBeUndefined();
+  });
+
+  test("returns next race in calendar - last - (testData3)", () => {
+    const mockDate = new Date(1700002800000);
+
+    jest.spyOn(global, "Date").mockImplementation((): any => mockDate);
+    const nextRace = getNextRace(racesArr);
+    expect(nextRace).toStrictEqual(testData3);
+  });
+  test("returns next race in calendar - middle - (testData2)", () => {
+    const mockDate = new Date(1688076000000);
+
+    jest.spyOn(global, "Date").mockImplementation((): any => mockDate);
+    const nextRace = getNextRace(racesArr);
+    expect(nextRace).toStrictEqual(testData2);
+  });
+
+  test("returns next race in calendar - first - (testData1)", () => {
+    const mockDate = new Date(1685397600000);
+
+    jest.spyOn(global, "Date").mockImplementation((): any => mockDate);
+    const nextRace = getNextRace(racesArr);
+    expect(nextRace).toStrictEqual(testData1);
   });
 });

@@ -55,12 +55,13 @@ export const getNextRace = (races: RaceObj[]): RaceObj | undefined => {
     (acc: RaceObj["race_date"], val: RaceObj) => {
       const raceToNowDiff = val.race_date - nowTimestamp;
       const prevRaceToNowDiff = acc - nowTimestamp;
-      if (acc === -1) return val.race_date;
-      return raceToNowDiff >= 0 && raceToNowDiff < prevRaceToNowDiff
+
+      return prevRaceToNowDiff < 0 ||
+        (raceToNowDiff >= 0 && raceToNowDiff < prevRaceToNowDiff)
         ? val.race_date
         : acc;
     },
-    -1
+    races[0].race_date
   );
 
   const nextRace = races.find(
