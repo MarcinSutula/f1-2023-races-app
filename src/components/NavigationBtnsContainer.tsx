@@ -1,9 +1,6 @@
 import { useContext } from "react";
-import {
-  RacesArrContext,
-  ViewContext,
-  UpdateCurrentlySelectedRace,
-} from "../App";
+import { RacesArrContext, UpdateCurrentlySelectedRace } from "../App";
+import { useMapViewContext } from "../context/MapViewContext";
 import { RaceObj } from "../race-types";
 import { viewGoToRace } from "../utils/map-utils";
 import NavBtn from "./NavBtn";
@@ -23,7 +20,7 @@ function NavigationBtnsContainer({
   setIsLoading,
   isLoading,
 }: NavigationBtnsProps) {
-  const viewCtx = useContext(ViewContext);
+  const mapViewCtx = useMapViewContext();
   const racesArrCtx = useContext(RacesArrContext);
   const updateCurrentlySelectedRaceCtx = useContext(
     UpdateCurrentlySelectedRace
@@ -37,8 +34,9 @@ function NavigationBtnsContainer({
       const isDisabled =
         mode === "next" ? isNextBtnDisabled : isBackBtnDisabled;
 
-      if (!viewCtx || !racesArrCtx || isDisabled)
+      if (!mapViewCtx || !racesArrCtx || isDisabled)
         throw new Error("Problem with initializing navigation");
+      const { view } = mapViewCtx;
       setIsLoading(true);
 
       const clickedRaceIndex = racesArrCtx.findIndex(
@@ -52,7 +50,7 @@ function NavigationBtnsContainer({
         mode === "next" ? clickedRaceIndex + 1 : clickedRaceIndex - 1;
 
       const followingRace = racesArrCtx[followingRaceIndex];
-      await viewGoToRace(viewCtx, followingRace.geometry);
+      await viewGoToRace(view, followingRace.geometry);
       setClickedRaceObj(followingRace);
       updateCurrentlySelectedRaceCtx &&
         updateCurrentlySelectedRaceCtx({

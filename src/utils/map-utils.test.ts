@@ -30,18 +30,17 @@ jest.mock("@arcgis/core/layers/FeatureLayer", () =>
 describe("initMapView()", () => {
   test("initializes view and renders map with layer", () => {
     const container = document.createElement("div");
-    const mapObjects = initMapView(container);
+    const viewLayer = initMapView(container);
     expect(FeatureLayer).toBeCalled();
     expect(WebMap).toBeCalled();
     expect(MapView).toBeCalled();
-    expect(mapObjects).toBeDefined();
-    expect(mapObjects.length).toBe(2);
+    expect(viewLayer).toBeDefined();
   });
 });
 
 describe("onRaceMapClickHandler()", () => {
   const container = document.createElement("div");
-  const view = initMapView(container)[0];
+  const { view } = initMapView(container);
   const hitTestResponse: any = {
     results: [
       {

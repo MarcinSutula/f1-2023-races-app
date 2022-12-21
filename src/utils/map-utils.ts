@@ -31,7 +31,7 @@ type ViewGoToRaceFnType = (
 
 export const initMapView = (
   mapDiv: HTMLDivElement
-): [MapView, FeatureLayer] => {
+): { view: MapView; layer: FeatureLayer } => {
   const layer = new FeatureLayer({
     url: process.env.REACT_APP_FEATURELAYER_URL,
   });
@@ -52,7 +52,7 @@ export const initMapView = (
     popup: undefined,
   });
 
-  return [newView, layer];
+  return { view: newView, layer };
 };
 
 export const getRacesLayer = (

@@ -3,7 +3,6 @@ import DetailsPanel from "./components/DetailsPanel";
 import { useEffect, createContext, useRef, useState } from "react";
 import { RaceObj, RaceRefObj } from "./race-types";
 import {
-  initMapView,
   viewGoToRace,
   changeNextRaceSymbology,
   createPolylineBetweenRaces,
@@ -12,20 +11,18 @@ import { fetchAllRaces } from "./utils/server-utils";
 import MapSpinner from "./components/MapSpinner";
 import { onRaceClickMapHandler } from "./utils/map-utils";
 import { getNextRace } from "./utils/utils";
+import { useMapViewContext } from "./context/MapViewContext";
 
-export const ViewContext = createContext<__esri.MapView | undefined>(undefined);
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
 export const UpdateCurrentlySelectedRace =
   createContext<((raceRefObj: RaceRefObj) => void) | undefined>(undefined);
 
 function App() {
-  const mapDiv = useRef<HTMLDivElement>(null);
   const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
-  const [view, setView] = useState<__esri.MapView>();
   const [racesArr, setRacesArr] = useState<RaceObj[] | undefined>();
   const currentlySelectedRaceRef = useRef<RaceRefObj>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  const mapViewCtx = useMapViewContext();
   const updateCurrentlySelectedRace = (raceRefObj: RaceRefObj) => {
     currentlySelectedRaceRef.current = raceRefObj;
   };
@@ -54,7 +51,6 @@ function App() {
     racesArray: RaceObj[],
     nextRace: RaceObj | undefined
   ) => {
-    setView(view);
     if (nextRace) {
       setClickedRaceObj(nextRace);
       updateCurrentlySelectedRace({
@@ -80,9 +76,9 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        if (!mapDiv.current) throw new Error("Could not locate map div");
+        if (!mapViewCtx) return;
+        const { view, layer } = mapViewCtx;
         setIsLoading(true);
-        const [newView, layer] = initMapView(mapDiv.current);
         const racesArr = await fetchAllRaces(layer);
         if (!racesArr) {
           setIsLoading(false);
@@ -90,10 +86,10 @@ function App() {
         }
         setRacesArr(racesArr);
         const nextRace = getNextRace(racesArr);
-        nextRace && changeNextRaceSymbology(layer, nextRace);
+        nextRace && changeNextRaceSymbology(mapViewCtx.layer, nextRace);
 
-        newView.when(function () {
-          onViewInstanceCreated(newView, racesArr, nextRace);
+        view.when(function () {
+          onViewInstanceCreated(view, racesArr, nextRace);
         });
       } catch (err) {
         setIsLoading(false);
@@ -106,31 +102,28 @@ function App() {
     })();
 
     return () => {
-      view?.destroy();
+      mapViewCtx?.view.destroy();
     };
-  }, []);
+  }, [mapViewCtx]);
 
   return (
-    <div className="flex h-screen bg-black">
-      <div className="h-screen w-screen p-0 m-0" ref={mapDiv}></div>
-      {clickedRaceObj && view && (
+    <>
+      {clickedRaceObj && mapViewCtx?.view && (
         <RacesArrContext.Provider value={racesArr}>
-          <ViewContext.Provider value={view}>
-            <UpdateCurrentlySelectedRace.Provider
-              value={updateCurrentlySelectedRace}
-            >
-              <DetailsPanel
-                clickedRaceObj={clickedRaceObj}
-                setClickedRaceObj={setClickedRaceObj}
-                setIsLoading={setIsLoading}
-                isLoading={isLoading}
-              />
-            </UpdateCurrentlySelectedRace.Provider>
-          </ViewContext.Provider>
+          <UpdateCurrentlySelectedRace.Provider
+            value={updateCurrentlySelectedRace}
+          >
+            <DetailsPanel
+              clickedRaceObj={clickedRaceObj}
+              setClickedRaceObj={setClickedRaceObj}
+              setIsLoading={setIsLoading}
+              isLoading={isLoading}
+            />
+          </UpdateCurrentlySelectedRace.Provider>
         </RacesArrContext.Provider>
       )}
       <MapSpinner isLoading={isLoading} />
-    </div>
+    </>
   );
 }
 
