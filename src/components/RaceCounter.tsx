@@ -1,13 +1,12 @@
 import { RaceObj } from "../race-types";
-import { useContext } from "react";
-import { RacesArrContext } from "../App";
+import { useRacesArrContext } from "../context/RacesArrContext";
 
 export type RaceCounterProps = {
   selectedRaceOid: RaceObj["OBJECTID"];
 };
 
 function RaceCounter({ selectedRaceOid }: RaceCounterProps) {
-  const racesArrCtx = useContext(RacesArrContext);
+  const racesArrCtx = useRacesArrContext();
   const racesSum = racesArrCtx ? racesArrCtx.length : "";
   let raceOrdNum = racesArrCtx
     ? racesArrCtx.findIndex((race) => race.OBJECTID === selectedRaceOid) + 1

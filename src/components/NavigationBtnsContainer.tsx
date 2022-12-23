@@ -1,6 +1,7 @@
 import { useContext } from "react";
-import { RacesArrContext, UpdateCurrentlySelectedRace } from "../App";
+import { UpdateCurrentlySelectedRace } from "../App";
 import { useMapViewContext } from "../context/MapViewContext";
+import { useRacesArrContext } from "../context/RacesArrContext";
 import { RaceObj } from "../race-types";
 import { viewGoToRace } from "../utils/map-utils";
 import NavBtn from "./NavBtn";
@@ -21,7 +22,7 @@ function NavigationBtnsContainer({
   isLoading,
 }: NavigationBtnsProps) {
   const mapViewCtx = useMapViewContext();
-  const racesArrCtx = useContext(RacesArrContext);
+  const racesArrCtx = useRacesArrContext();
   const updateCurrentlySelectedRaceCtx = useContext(
     UpdateCurrentlySelectedRace
   );

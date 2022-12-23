@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { initMapView } from "../utils/map-utils";
 
 const MapViewContext =
@@ -6,7 +13,13 @@ const MapViewContext =
     { view: __esri.MapView; layer: __esri.FeatureLayer } | undefined
   >(undefined);
 
-export const MapViewContextProvider = ({ children }: any) => {
+type MapViewContextProviderProps = {
+  children: ReactNode;
+};
+
+export const MapViewContextProvider = ({
+  children,
+}: MapViewContextProviderProps) => {
   const mapDiv = useRef<HTMLDivElement>(null);
   const [viewLayer, setViewLayer] =
     useState<{ view: __esri.MapView; layer: __esri.FeatureLayer }>();

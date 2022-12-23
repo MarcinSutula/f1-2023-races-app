@@ -7,11 +7,11 @@ import {
   changeNextRaceSymbology,
   createPolylineBetweenRaces,
 } from "./utils/map-utils";
-import { fetchAllRaces } from "./utils/server-utils";
 import MapSpinner from "./components/MapSpinner";
 import { onRaceClickMapHandler } from "./utils/map-utils";
 import { getNextRace } from "./utils/utils";
 import { useMapViewContext } from "./context/MapViewContext";
+import { useRacesArrContext } from "./context/RacesArrContext";
 
 export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
 export const UpdateCurrentlySelectedRace =
@@ -19,10 +19,12 @@ export const UpdateCurrentlySelectedRace =
 
 function App() {
   const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
-  const [racesArr, setRacesArr] = useState<RaceObj[] | undefined>();
   const currentlySelectedRaceRef = useRef<RaceRefObj>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const mapViewCtx = useMapViewContext();
+  const racesArrCtx = useRacesArrContext();
+
+  
   const updateCurrentlySelectedRace = (raceRefObj: RaceRefObj) => {
     currentlySelectedRaceRef.current = raceRefObj;
   };
@@ -76,20 +78,14 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        if (!mapViewCtx) return;
-        const { view, layer } = mapViewCtx;
+        if (!mapViewCtx || !racesArrCtx) return;
+        const { view } = mapViewCtx;
         setIsLoading(true);
-        const racesArr = await fetchAllRaces(layer);
-        if (!racesArr) {
-          setIsLoading(false);
-          throw new Error("Problem with fetching races");
-        }
-        setRacesArr(racesArr);
-        const nextRace = getNextRace(racesArr);
+        const nextRace = getNextRace(racesArrCtx);
         nextRace && changeNextRaceSymbology(mapViewCtx.layer, nextRace);
 
         view.when(function () {
-          onViewInstanceCreated(view, racesArr, nextRace);
+          onViewInstanceCreated(view, racesArrCtx, nextRace);
         });
       } catch (err) {
         setIsLoading(false);
@@ -104,23 +100,21 @@ function App() {
     return () => {
       mapViewCtx?.view.destroy();
     };
-  }, [mapViewCtx]);
+  }, [racesArrCtx]);
 
   return (
     <>
-      {clickedRaceObj && mapViewCtx?.view && (
-        <RacesArrContext.Provider value={racesArr}>
-          <UpdateCurrentlySelectedRace.Provider
-            value={updateCurrentlySelectedRace}
-          >
-            <DetailsPanel
-              clickedRaceObj={clickedRaceObj}
-              setClickedRaceObj={setClickedRaceObj}
-              setIsLoading={setIsLoading}
-              isLoading={isLoading}
-            />
-          </UpdateCurrentlySelectedRace.Provider>
-        </RacesArrContext.Provider>
+      {clickedRaceObj && mapViewCtx?.view && racesArrCtx && (
+        <UpdateCurrentlySelectedRace.Provider
+          value={updateCurrentlySelectedRace}
+        >
+          <DetailsPanel
+            clickedRaceObj={clickedRaceObj}
+            setClickedRaceObj={setClickedRaceObj}
+            setIsLoading={setIsLoading}
+            isLoading={isLoading}
+          />
+        </UpdateCurrentlySelectedRace.Provider>
       )}
       <MapSpinner isLoading={isLoading} />
     </>
