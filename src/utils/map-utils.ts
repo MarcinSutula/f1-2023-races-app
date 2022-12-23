@@ -2,7 +2,7 @@ import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { RefObject } from "react";
+import { RefObject,  Dispatch, SetStateAction } from "react";
 import {
   GO_TO_RACE_ANIMATION_DURATION,
   GO_TO_RACE_ANIMATION_EASING,
@@ -18,8 +18,8 @@ type OnRaceMapClickHandlerFnType = (
   hitTestResponse: __esri.HitTestResult,
   currentlySelectedRaceRef: RefObject<RaceRefObj | undefined>,
   races: RaceObj[],
-  setIsLoading: (isLoading: boolean) => void,
-  setClickedRaceObj: (raceObj: RaceObj) => void
+  setIsLoading: Dispatch<SetStateAction<boolean>>,
+  setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>
 ) => Promise<RaceRefObj | void>;
 
 type ViewGoToRaceFnType = (
