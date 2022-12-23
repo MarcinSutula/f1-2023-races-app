@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, Dispatch, SetStateAction } from "react";
 import { UpdateSelectedRaceContext } from "../App";
 import { useMapViewContext } from "../context/MapViewContext";
 import { useRacesArrContext } from "../context/RacesArrContext";
@@ -8,9 +8,9 @@ import NavBtn from "./NavBtn";
 
 type NavigationBtnsProps = {
   clickedRaceOid: RaceObj["OBJECTID"];
-  setClickedRaceObj: (raceObj: RaceObj) => void;
-  setIsLoading: (isLoading: boolean) => void;
+  setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>;
   isLoading: boolean;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 export type NavigationMode = "back" | "next";

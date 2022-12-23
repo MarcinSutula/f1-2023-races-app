@@ -9,12 +9,13 @@ import CircuitDetailsBtn from "./CircuitDetailsBtn";
 import RaceCounter from "./RaceCounter";
 import { lapRecordInfoFormatter } from "../utils/utils";
 import PanelCard from "./PanelCard";
+import { Dispatch, SetStateAction } from "react";
 
 type DetailsPanelProps = {
   clickedRaceObj: RaceObj;
-  setClickedRaceObj: (raceObj: RaceObj) => void;
+  setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>;
   isLoading: boolean;
-  setIsLoading: (isLoading: boolean) => void;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 function DetailsPanel({
