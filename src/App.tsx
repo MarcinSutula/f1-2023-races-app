@@ -13,7 +13,7 @@ import { getNextRace } from "./utils/utils";
 import { useMapViewContext } from "./context/MapViewContext";
 import { useRacesArrContext } from "./context/RacesArrContext";
 
-export const UpdateCurrentlySelectedRace =
+export const UpdateSelectedRaceContext =
   createContext<((raceRefObj: RaceRefObj) => void) | undefined>(undefined);
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
   const mapViewCtx = useMapViewContext();
   const racesArrCtx = useRacesArrContext();
 
-  const updateCurrentlySelectedRace = (raceRefObj: RaceRefObj) => {
+  const updateSelectedRace = (raceRefObj: RaceRefObj) => {
     selectedRaceRef.current = raceRefObj;
   };
 
@@ -41,7 +41,7 @@ function App() {
           setIsLoading,
           setClickedRaceObj
         );
-        hitData && updateCurrentlySelectedRace(hitData);
+        hitData && updateSelectedRace(hitData);
       }
     });
   };
@@ -53,7 +53,7 @@ function App() {
   ) => {
     if (nextRace) {
       setClickedRaceObj(nextRace);
-      updateCurrentlySelectedRace({
+      updateSelectedRace({
         oid: nextRace.OBJECTID,
         geometry: nextRace.geometry,
       });
@@ -103,16 +103,14 @@ function App() {
   return (
     <>
       {clickedRaceObj && mapViewCtx?.view && racesArrCtx && (
-        <UpdateCurrentlySelectedRace.Provider
-          value={updateCurrentlySelectedRace}
-        >
+        <UpdateSelectedRaceContext.Provider value={updateSelectedRace}>
           <DetailsPanel
             clickedRaceObj={clickedRaceObj}
             setClickedRaceObj={setClickedRaceObj}
             setIsLoading={setIsLoading}
             isLoading={isLoading}
           />
-        </UpdateCurrentlySelectedRace.Provider>
+        </UpdateSelectedRaceContext.Provider>
       )}
       <MapSpinner isLoading={isLoading} />
     </>

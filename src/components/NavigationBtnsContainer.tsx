@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { UpdateCurrentlySelectedRace } from "../App";
+import { UpdateSelectedRaceContext } from "../App";
 import { useMapViewContext } from "../context/MapViewContext";
 import { useRacesArrContext } from "../context/RacesArrContext";
 import { RaceObj } from "../race-types";
@@ -23,9 +23,7 @@ function NavigationBtnsContainer({
 }: NavigationBtnsProps) {
   const mapViewCtx = useMapViewContext();
   const racesArrCtx = useRacesArrContext();
-  const updateCurrentlySelectedRaceCtx = useContext(
-    UpdateCurrentlySelectedRace
-  );
+  const updateSelectedRaceCtx = useContext(UpdateSelectedRaceContext);
 
   const isBackBtnDisabled = racesArrCtx?.at(0)?.OBJECTID === clickedRaceOid;
   const isNextBtnDisabled = racesArrCtx?.at(-1)?.OBJECTID === clickedRaceOid;
@@ -53,8 +51,8 @@ function NavigationBtnsContainer({
       const followingRace = racesArrCtx[followingRaceIndex];
       await viewGoToRace(view, followingRace.geometry);
       setClickedRaceObj(followingRace);
-      updateCurrentlySelectedRaceCtx &&
-        updateCurrentlySelectedRaceCtx({
+      updateSelectedRaceCtx &&
+        updateSelectedRaceCtx({
           oid: followingRace.OBJECTID,
           geometry: followingRace.geometry,
         });
