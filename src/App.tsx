@@ -13,20 +13,18 @@ import { getNextRace } from "./utils/utils";
 import { useMapViewContext } from "./context/MapViewContext";
 import { useRacesArrContext } from "./context/RacesArrContext";
 
-export const RacesArrContext = createContext<RaceObj[] | undefined>(undefined);
 export const UpdateCurrentlySelectedRace =
   createContext<((raceRefObj: RaceRefObj) => void) | undefined>(undefined);
 
 function App() {
   const [clickedRaceObj, setClickedRaceObj] = useState<RaceObj>();
-  const currentlySelectedRaceRef = useRef<RaceRefObj>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const selectedRaceRef = useRef<RaceRefObj>();
   const mapViewCtx = useMapViewContext();
   const racesArrCtx = useRacesArrContext();
 
-  
   const updateCurrentlySelectedRace = (raceRefObj: RaceRefObj) => {
-    currentlySelectedRaceRef.current = raceRefObj;
+    selectedRaceRef.current = raceRefObj;
   };
 
   const onMapClickHandler = (view: __esri.MapView, races: RaceObj[]): void => {
@@ -38,7 +36,7 @@ function App() {
         const hitData = await onRaceClickMapHandler(
           view,
           hitTestResponse,
-          currentlySelectedRaceRef,
+          selectedRaceRef,
           races,
           setIsLoading,
           setClickedRaceObj
