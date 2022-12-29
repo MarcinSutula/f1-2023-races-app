@@ -7,7 +7,7 @@ export type RaceLocationProps = {
 
 function RaceLocation({ city, country }: RaceLocationProps) {
   return (
-    <p className="text-white text-2xl text-center my-6">{`${city}, ${country}`}</p>
+    <p className="text-white text-2xl text-center mb-5">{`${city}, ${country}`}</p>
   );
 }
 

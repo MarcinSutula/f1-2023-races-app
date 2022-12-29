@@ -8,7 +8,7 @@ function CircuitDetailsBtn() {
         }}
         className="bg-btnFadedRed h-14 text-center w-5/6 text-textFadedWhite font-bold mt-8"
       >
-        Work in progress...
+        Circuit's details
       </button>
     </div>
   );

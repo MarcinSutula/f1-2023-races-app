@@ -17,7 +17,7 @@ function RaceCounter({ selectedRaceOid }: RaceCounterProps) {
   const raceCounterStr = `${raceOrdNum}/${racesSum}`;
 
   return (
-    <p className="text-[white] text-3xl text-center my-2 ml-4 p-2 border-2 border-solid border-[grey]">
+    <p className="text-[white] font-semibold text- text-3xl text-center my-4 ml-4">
       {raceCounterStr}
     </p>
   );

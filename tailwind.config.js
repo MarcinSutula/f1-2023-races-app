@@ -5,6 +5,7 @@ module.exports = {
     extend: {
       colors: {
         primaryBg: "#100636",
+        primaryBgLight: "#271E4A",
         btnFadedRed: "#ff000038",
         textFadedWhite: "#ffffff91",
         spinnerMain: "#1e90ff",

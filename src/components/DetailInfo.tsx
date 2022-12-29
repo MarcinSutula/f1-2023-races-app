@@ -28,10 +28,15 @@ function DetailInfo({
   }
 
   return (
-    <div className="mt-2 mx-5">
+    <div
+      className="mt-2 mx-5  border-b-2 border-solid border-[darkred]"
+      style={{ border: main ? "none" : "" }}
+    >
       <p
         className={styleP1}
-        style={{ color: customMainLabelColor && main ? customMainLabelColor : "" }}
+        style={{
+          color: customMainLabelColor && main ? customMainLabelColor : "",
+        }}
       >
         {label}
       </p>

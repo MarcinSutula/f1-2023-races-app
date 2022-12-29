@@ -46,30 +46,32 @@ function DetailsPanel({
         />
         <PanelImage attribute={clickedRaceObj.country} type="flag" />
       </div>
-      <RaceLocation
-        city={clickedRaceObj.city}
-        country={clickedRaceObj.country}
-      />
-      <DetailInfo
-        label="Race Distance"
-        info={clickedRaceObj.race_dist.toString()}
-        measure="km"
-        separatorIndex={3}
-      />
-      <DetailInfo
-        label="Circuit Length"
-        info={clickedRaceObj.circuit_length.toString()}
-        measure="km"
-        separatorIndex={1}
-      />
-      <DetailInfo
-        label="Number of Laps"
-        info={clickedRaceObj.laps_num.toString()}
-      />
-      <DetailInfo
-        label="Number of DRS Zones"
-        info={clickedRaceObj.drs_zones_num.toString()}
-      />
+      <div className="bg-primaryBgLight mx-6 my-4 py-2 rounded-lg">
+        <RaceLocation
+          city={clickedRaceObj.city}
+          country={clickedRaceObj.country}
+        />
+        <DetailInfo
+          label="Race Distance"
+          info={clickedRaceObj.race_dist.toString()}
+          measure="km"
+          separatorIndex={3}
+        />
+        <DetailInfo
+          label="Circuit Length"
+          info={clickedRaceObj.circuit_length.toString()}
+          measure="km"
+          separatorIndex={1}
+        />
+        <DetailInfo
+          label="Number of Laps"
+          info={clickedRaceObj.laps_num.toString()}
+        />
+        <DetailInfo
+          label="Number of DRS Zones"
+          info={clickedRaceObj.drs_zones_num.toString()}
+        />
+      </div>
       {clickedRaceObj.lap_record_owner &&
         clickedRaceObj.lap_record_year &&
         clickedRaceObj.lap_record_seconds && (
