@@ -62,11 +62,11 @@ function App() {
         (race) => race.OBJECTID === nextRace.OBJECTID
       );
       if (nextRaceIndex !== 0) {
-        const line = createPolylineBetweenRaces(
+        const polyline = createPolylineBetweenRaces(
           racesArray[nextRaceIndex - 1],
           nextRace
         );
-        view.graphics.add(line);
+        view.graphics.add(polyline);
       }
     }
     onMapClickHandler(view, racesArray);
