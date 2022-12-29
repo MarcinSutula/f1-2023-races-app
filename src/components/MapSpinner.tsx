@@ -1,6 +1,6 @@
 import { ThreeCircles } from "react-loader-spinner";
 
-function MapSpinner({isLoading}:{isLoading: boolean}) {
+function MapSpinner({ isLoading }: { isLoading: boolean }) {
   return (
     <ThreeCircles
       height="100"

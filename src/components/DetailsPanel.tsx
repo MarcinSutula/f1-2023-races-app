@@ -25,7 +25,7 @@ function DetailsPanel({
   setIsLoading,
 }: DetailsPanelProps) {
   return (
-    <PanelCard backgroundColor="#100636">
+    <PanelCard>
       <div className="flex justify-between align-middle mb-2">
         <RaceCounter selectedRaceOid={clickedRaceObj.OBJECTID} />
         <NavigationBtnsContainer
