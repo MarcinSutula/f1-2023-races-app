@@ -2,11 +2,7 @@ import "./App.css";
 import DetailsPanel from "./components/DetailsPanel";
 import { useEffect, createContext, useRef, useState } from "react";
 import { RaceObj, RaceRefObj } from "./race-types";
-import {
-  viewGoToRace,
-  changeRacesSymbology,
-  createPolylineBetweenRaces,
-} from "./utils/map-utils";
+import { changeRacesSymbology, onViewInstanceCreated } from "./utils/map-utils";
 import MapSpinner from "./components/MapSpinner";
 import { onRaceClickMapHandler } from "./utils/map-utils";
 import { getNextRace } from "./utils/utils";
@@ -46,33 +42,6 @@ function App() {
     });
   };
 
-  const onViewInstanceCreated = async (
-    view: __esri.MapView,
-    racesArray: RaceObj[],
-    nextRace: RaceObj | undefined
-  ) => {
-    if (nextRace) {
-      setClickedRaceObj(nextRace);
-      updateSelectedRace({
-        oid: nextRace.OBJECTID,
-        geometry: nextRace.geometry,
-      });
-      await viewGoToRace(view, nextRace.geometry);
-      const nextRaceIndex = racesArray.findIndex(
-        (race) => race.OBJECTID === nextRace.OBJECTID
-      );
-      if (nextRaceIndex !== 0) {
-        const polyline = createPolylineBetweenRaces(
-          racesArray[nextRaceIndex - 1],
-          nextRace
-        );
-        view.graphics.add(polyline);
-      }
-    }
-    onMapClickHandler(view, racesArray);
-    setIsLoading(false);
-  };
-
   useEffect(() => {
     (async () => {
       try {
@@ -82,7 +51,17 @@ function App() {
         const nextRace = getNextRace(racesArrCtx);
         nextRace && changeRacesSymbology(mapViewCtx.layer, nextRace);
 
-        view.when(() => onViewInstanceCreated(view, racesArrCtx, nextRace));
+        view.when(() =>
+          onViewInstanceCreated(
+            view,
+            racesArrCtx,
+            nextRace,
+            setClickedRaceObj,
+            setIsLoading,
+            updateSelectedRace,
+            () => onMapClickHandler(view, racesArrCtx)
+          )
+        );
       } catch (err) {
         setIsLoading(false);
         if (err instanceof Error) {
@@ -93,9 +72,7 @@ function App() {
       }
     })();
 
-    return () => {
-      mapViewCtx?.view.destroy();
-    };
+    return () => mapViewCtx?.view.destroy();
   }, [racesArrCtx]);
 
   return (

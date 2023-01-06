@@ -24,6 +24,16 @@ type OnRaceMapClickHandlerFnType = (
   setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>
 ) => Promise<RaceRefObj | void>;
 
+type OnViewInstanceCreatedFnType = (
+  view: __esri.MapView,
+  races: RaceObj[],
+  nextRace: RaceObj | undefined,
+  setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>,
+  setIsLoading: Dispatch<SetStateAction<boolean>>,
+  updateSelectedRace: (raceRefObj: RaceRefObj) => void,
+  callback: () => void
+) => Promise<void>;
+
 type ViewGoToRaceFnType = (
   view: __esri.MapView,
   raceGeometry: __esri.Geometry,
@@ -192,6 +202,37 @@ export const createPolylineBetweenRaces = (
   });
 
   return polylineGraphic;
+};
+
+export const onViewInstanceCreated: OnViewInstanceCreatedFnType = async (
+  view,
+  races,
+  nextRace,
+  setClickedRaceObj,
+  setIsLoading,
+  updateSelectedRace,
+  callback
+) => {
+  if (!nextRace) return;
+  setClickedRaceObj(nextRace);
+  updateSelectedRace({
+    oid: nextRace.OBJECTID,
+    geometry: nextRace.geometry,
+  });
+  await viewGoToRace(view, nextRace.geometry);
+  const nextRaceIndex = races.findIndex(
+    (race) => race.OBJECTID === nextRace.OBJECTID
+  );
+  if (nextRaceIndex !== 0) {
+    const polyline = createPolylineBetweenRaces(
+      races[nextRaceIndex - 1],
+      nextRace
+    );
+    view.graphics.add(polyline);
+  }
+
+  callback();
+  setIsLoading(false);
 };
 
 // export const calculatePointAlongLine = (start: any, end: any, ratio: any) => {
