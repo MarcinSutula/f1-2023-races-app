@@ -145,12 +145,11 @@ describe("onViewInstanceCreated()", () => {
   });
 
   test("if next race is defined, set it as clicked, update selected race and go to it on map", async () => {
-    const nextRace = races[0];
     const viewGoToRaceSpy = jest.spyOn(mapUtils, "viewGoToRace");
     await mapUtils.onViewInstanceCreated(
       view,
       races,
-      nextRace,
+      races[0],
       setClickedRaceObj,
       setIsLoading,
       updateSelectedRace,
@@ -159,10 +158,10 @@ describe("onViewInstanceCreated()", () => {
 
     expect(setClickedRaceObj).toBeCalledWith(races[0]);
     expect(updateSelectedRace).toBeCalledWith({
-      oid: nextRace.OBJECTID,
-      geometry: nextRace.geometry,
+      oid: races[0].OBJECTID,
+      geometry: races[0].geometry,
     });
-    expect(viewGoToRaceSpy).toBeCalledWith(view, nextRace.geometry);
+    expect(viewGoToRaceSpy).toBeCalledWith(view, races[0].geometry);
   });
 });
 
@@ -187,14 +186,13 @@ describe("onRaceMapClickHandler()", () => {
     current: undefined,
   };
 
-  let setIsLoading: jest.Mock;
-  let setClickedRaceObj: jest.Mock;
+  const setIsLoading = jest.fn();
+  const setClickedRaceObj = jest.fn();
 
-  beforeEach(() => {
+  afterEach(() => {
     raceRefObj.current = undefined;
-    setIsLoading = jest.fn();
-    setClickedRaceObj = jest.fn();
     hitTestResponse.results[0].graphic.attributes.OBJECTID = testData1.OBJECTID;
+    jest.clearAllMocks();
   });
 
   test("returns undefined having selected not an object", async () => {
@@ -244,8 +242,8 @@ describe("onRaceMapClickHandler()", () => {
 
   test("does not switch between loading states having selected the same race", async () => {
     raceRefObj.current = {
-      oid: testData1.OBJECTID,
-      geometry: testData1.geometry,
+      oid: races[0].OBJECTID,
+      geometry: races[0].geometry,
     };
 
     await mapUtils.onRaceClickMapHandler(
@@ -260,6 +258,8 @@ describe("onRaceMapClickHandler()", () => {
   });
 
   test("goes to a race on map and selects it with callback, not having selected anything before", async () => {
+    const viewGoToRaceSpy = jest.spyOn(mapUtils, "viewGoToRace");
+
     await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
@@ -269,15 +269,17 @@ describe("onRaceMapClickHandler()", () => {
       setClickedRaceObj
     );
 
-    expect(goToMock).toBeCalled();
-    expect(setClickedRaceObj).lastCalledWith(testData1);
+    expect(viewGoToRaceSpy).toBeCalledWith(view, races[0].geometry);
+    expect(setClickedRaceObj).lastCalledWith(races[0]);
   });
 
   test("goes to a race on map and selects it with callback, having selected some other race before", async () => {
     raceRefObj.current = {
-      oid: testData2.OBJECTID,
-      geometry: testData2.geometry,
+      oid: races[1].OBJECTID,
+      geometry: races[1].geometry,
     };
+    const viewGoToRaceSpy = jest.spyOn(mapUtils, "viewGoToRace");
+
     await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
@@ -287,15 +289,16 @@ describe("onRaceMapClickHandler()", () => {
       setClickedRaceObj
     );
 
-    expect(goToMock).toBeCalled();
+    expect(viewGoToRaceSpy).toBeCalledWith(view, races[0].geometry);
     expect(setClickedRaceObj).lastCalledWith(testData1);
   });
 
   test("goes to same race on map and does not select it with callback", async () => {
     raceRefObj.current = {
-      oid: testData1.OBJECTID,
-      geometry: testData1.geometry,
+      oid: races[0].OBJECTID,
+      geometry: races[0].geometry,
     };
+    const viewGoToRaceSpy = jest.spyOn(mapUtils, "viewGoToRace");
     await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
@@ -305,7 +308,12 @@ describe("onRaceMapClickHandler()", () => {
       setClickedRaceObj
     );
 
-    expect(goToMock).toBeCalled();
+    expect(viewGoToRaceSpy).toBeCalledWith(
+      view,
+      raceRefObj.current.geometry,
+      false,
+      false
+    );
     expect(setClickedRaceObj).not.toBeCalled();
   });
 
@@ -320,15 +328,15 @@ describe("onRaceMapClickHandler()", () => {
     );
 
     expect(clickedRace).toStrictEqual({
-      oid: testData1.OBJECTID,
-      geometry: testData1.geometry,
+      oid: races[0].OBJECTID,
+      geometry: races[0].geometry,
     });
   });
 
   test("returns undefined if clicked same race", async () => {
     raceRefObj.current = {
-      oid: testData1.OBJECTID,
-      geometry: testData1.geometry,
+      oid: races[0].OBJECTID,
+      geometry: races[0].geometry,
     };
     const clickedRace = await mapUtils.onRaceClickMapHandler(
       view,
