@@ -1,9 +1,4 @@
-import {
-  initMapView,
-  onRaceClickMapHandler,
-  changeRacesSymbology,
-  createPolylineBetweenRaces,
-} from "./map-utils";
+import * as mapUtils from "./map-utils";
 import * as utils from "./utils";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
@@ -30,7 +25,7 @@ jest.mock("@arcgis/core/layers/FeatureLayer", () =>
 describe("initMapView()", () => {
   test("initializes view and renders map with layer", () => {
     const container = document.createElement("div");
-    const viewLayer = initMapView(container);
+    const viewLayer = mapUtils.initMapView(container);
     expect(FeatureLayer).toBeCalled();
     expect(WebMap).toBeCalled();
     expect(MapView).toBeCalled();
@@ -38,9 +33,142 @@ describe("initMapView()", () => {
   });
 });
 
+describe("onViewInstanceCreated()", () => {
+  const container = document.createElement("div");
+  const { view } = mapUtils.initMapView(container);
+  (view as any).graphics = {
+    add: () => {},
+  };
+  const hitTestResponse: any = {
+    results: [
+      {
+        graphic: {
+          attributes: {
+            OBJECTID: testData1.OBJECTID,
+          },
+        },
+      },
+    ],
+  };
+
+  const races = [testData1, testData3, testData2];
+
+  const raceRefObj: { current: RaceRefObj | undefined } = {
+    current: undefined,
+  };
+
+  const setIsLoading = jest.fn();
+  const setClickedRaceObj = jest.fn();
+  const updateSelectedRace = jest.fn();
+
+  afterEach(() => {
+    raceRefObj.current = undefined;
+    hitTestResponse.results[0].graphic.attributes.OBJECTID = testData1.OBJECTID;
+    jest.clearAllMocks();
+  });
+
+  test("calls callback and switches loading state when next race is defined", async () => {
+    const callback = jest.fn();
+
+    await mapUtils.onViewInstanceCreated(
+      view,
+      races,
+      races[0],
+      setClickedRaceObj,
+      setIsLoading,
+      updateSelectedRace,
+      callback
+    );
+
+    expect(callback).toBeCalled();
+    expect(setIsLoading).toBeCalledWith(false);
+  });
+
+  test("calls callback and switches loading state when next race is undefined", async () => {
+    const callback = jest.fn();
+
+    await mapUtils.onViewInstanceCreated(
+      view,
+      races,
+      undefined,
+      setClickedRaceObj,
+      setIsLoading,
+      updateSelectedRace,
+      callback
+    );
+
+    expect(callback).toBeCalled();
+    expect(setIsLoading).toBeCalledWith(false);
+  });
+
+  test("if next race is defined and it's first race of a season (response from server is sorted), does not create polyline", async () => {
+    const createPolylineSpy = jest.spyOn(
+      mapUtils,
+      "createPolylineBetweenRaces"
+    );
+    await mapUtils.onViewInstanceCreated(
+      view,
+      races,
+      races[0],
+      setClickedRaceObj,
+      setIsLoading,
+      updateSelectedRace,
+      () => {}
+    );
+
+    expect(createPolylineSpy).not.toBeCalled();
+  });
+
+  test("if next race is defined and it's NOT first race of a season (response from server is sorted), creates polyline", async () => {
+    const createPolylineSpy = jest.spyOn(
+      mapUtils,
+      "createPolylineBetweenRaces"
+    );
+    await mapUtils.onViewInstanceCreated(
+      view,
+      races,
+      races[1],
+      setClickedRaceObj,
+      setIsLoading,
+      updateSelectedRace,
+      () => {}
+    );
+
+    const nextRaceIndex = races.findIndex(
+      (race) => race.OBJECTID === races[1].OBJECTID
+    );
+
+    expect(createPolylineSpy).toBeCalledWith(
+      races[nextRaceIndex - 1],
+      races[1]
+    );
+  });
+
+  test("if next race is defined, set it as clicked, update selected race and go to it on map", async () => {
+    const nextRace = races[0];
+    const viewGoToRaceSpy = jest.spyOn(mapUtils, "viewGoToRace");
+    await mapUtils.onViewInstanceCreated(
+      view,
+      races,
+      nextRace,
+      setClickedRaceObj,
+      setIsLoading,
+      updateSelectedRace,
+      () => {}
+    );
+
+    expect(setClickedRaceObj).toBeCalledWith(races[0]);
+    expect(updateSelectedRace).toBeCalledWith({
+      oid: nextRace.OBJECTID,
+      geometry: nextRace.geometry,
+    });
+    expect(viewGoToRaceSpy).toBeCalledWith(view, nextRace.geometry);
+  });
+});
+
 describe("onRaceMapClickHandler()", () => {
   const container = document.createElement("div");
-  const { view } = initMapView(container);
+  const { view } = mapUtils.initMapView(container);
   const hitTestResponse: any = {
     results: [
       {
@@ -72,7 +200,7 @@ describe("onRaceMapClickHandler()", () => {
   test("returns undefined having selected not an object", async () => {
     hitTestResponse.results[0].graphic.attributes = {};
 
-    const clickedRace = await onRaceClickMapHandler(
+    const clickedRace = await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -85,7 +213,7 @@ describe("onRaceMapClickHandler()", () => {
   });
 
   test("switches between loading states having selected a different or new race", async () => {
-    await onRaceClickMapHandler(
+    await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -101,7 +229,7 @@ describe("onRaceMapClickHandler()", () => {
     hitTestResponse.results[0].graphic.attributes.OBJECTID = -1;
 
     await expect(async () => {
-      await onRaceClickMapHandler(
+      await mapUtils.onRaceClickMapHandler(
         view,
         hitTestResponse,
         raceRefObj,
@@ -120,7 +248,7 @@ describe("onRaceMapClickHandler()", () => {
       geometry: testData1.geometry,
     };
 
-    await onRaceClickMapHandler(
+    await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -132,7 +260,7 @@ describe("onRaceMapClickHandler()", () => {
   });
 
   test("goes to a race on map and selects it with callback, not having selected anything before", async () => {
-    await onRaceClickMapHandler(
+    await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -150,7 +278,7 @@ describe("onRaceMapClickHandler()", () => {
       oid: testData2.OBJECTID,
       geometry: testData2.geometry,
     };
-    await onRaceClickMapHandler(
+    await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -168,7 +296,7 @@ describe("onRaceMapClickHandler()", () => {
       oid: testData1.OBJECTID,
       geometry: testData1.geometry,
     };
-    await onRaceClickMapHandler(
+    await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -182,7 +310,7 @@ describe("onRaceMapClickHandler()", () => {
   });
 
   test("returns hit objectid and geometry if clicked new or different race", async () => {
-    const clickedRace = await onRaceClickMapHandler(
+    const clickedRace = await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -202,7 +330,7 @@ describe("onRaceMapClickHandler()", () => {
       oid: testData1.OBJECTID,
       geometry: testData1.geometry,
     };
-    const clickedRace = await onRaceClickMapHandler(
+    const clickedRace = await mapUtils.onRaceClickMapHandler(
       view,
       hitTestResponse,
       raceRefObj,
@@ -221,7 +349,7 @@ describe("changeRacesSymbology()", () => {
       renderer: {},
     } as any;
 
-    changeRacesSymbology(layer, testData1);
+    mapUtils.changeRacesSymbology(layer, testData1);
     expect(layer.renderer.visualVariables).toBeDefined();
     expect(layer.renderer.visualVariables.length).toBe(2);
   });
@@ -231,7 +359,7 @@ describe("createPolylineBetweenRaces", () => {
   const getGeometrySpy = jest.spyOn(utils, "getGeometry");
 
   test("creates a polyline between given two race objects", () => {
-    const polyline = createPolylineBetweenRaces(testData1, testData2);
+    const polyline = mapUtils.createPolylineBetweenRaces(testData1, testData2);
     expect(getGeometrySpy).toBeCalledTimes(2);
     expect(getGeometrySpy).toBeCalledWith(expect.anything(), "lng,lat");
     expect(polyline.geometry).toBeDefined();

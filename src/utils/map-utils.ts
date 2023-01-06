@@ -213,24 +213,24 @@ export const onViewInstanceCreated: OnViewInstanceCreatedFnType = async (
   updateSelectedRace,
   callback
 ) => {
-  if (!nextRace) return;
-  setClickedRaceObj(nextRace);
-  updateSelectedRace({
-    oid: nextRace.OBJECTID,
-    geometry: nextRace.geometry,
-  });
-  await viewGoToRace(view, nextRace.geometry);
-  const nextRaceIndex = races.findIndex(
-    (race) => race.OBJECTID === nextRace.OBJECTID
-  );
-  if (nextRaceIndex !== 0) {
-    const polyline = createPolylineBetweenRaces(
-      races[nextRaceIndex - 1],
-      nextRace
+  if (nextRace) {
+    setClickedRaceObj(nextRace);
+    updateSelectedRace({
+      oid: nextRace.OBJECTID,
+      geometry: nextRace.geometry,
+    });
+    await viewGoToRace(view, nextRace.geometry);
+    const nextRaceIndex = races.findIndex(
+      (race) => race.OBJECTID === nextRace.OBJECTID
     );
-    view.graphics.add(polyline);
+    if (nextRaceIndex !== 0) {
+      const polyline = createPolylineBetweenRaces(
+        races[nextRaceIndex - 1],
+        nextRace
+      );
+      view.graphics.add(polyline);
+    }
   }
-
   callback();
   setIsLoading(false);
 };
