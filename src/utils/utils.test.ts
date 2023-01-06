@@ -6,18 +6,10 @@ import {
 } from "./utils";
 import { testData1, testData2, testData3 } from "../testData";
 
-const originalConsoleError = console.error;
-let consoleErrorSpy: jest.SpyInstance;
-
-const generateConsoleErrorSpy = () =>
-  jest.spyOn(console, "error").mockImplementation((message) => message);
-
-beforeEach(() => {
-  consoleErrorSpy = generateConsoleErrorSpy();
-});
+jest.spyOn(console, "error").mockImplementation((message) => message);
 
 afterEach(() => {
-  console.error = originalConsoleError;
+  jest.clearAllMocks();
 });
 
 type lapRecordInSeconds = number | null;
@@ -28,15 +20,15 @@ describe("lapRecordFormatter()", () => {
     "returns '0' if lap null or < 0 or >= 3600 sec and shows console error",
     (arg: lapRecordInSeconds) => {
       const argFormatted = lapRecordFormatter(arg);
-      expect(consoleErrorSpy).toBeCalledTimes(1);
-      expect(consoleErrorSpy).toBeCalledWith("Invalid Lap Record");
+      expect(console.error).toBeCalledTimes(1);
+      expect(console.error).toBeCalledWith("Invalid Lap Record");
       expect(argFormatted).toBe("0");
     }
   );
 
   test("returns '0' if lap is 0 and does not show console error", () => {
     const lapRecordZero = lapRecordFormatter(0);
-    expect(consoleErrorSpy).not.toBeCalled();
+    expect(console.error).not.toBeCalled();
     expect(lapRecordZero).toBe("0");
   });
 
@@ -51,7 +43,7 @@ describe("lapRecordFormatter()", () => {
       const regex = /^\d{1,2}:\d{2}\.\d{3}$/;
       const argFormatted = lapRecordFormatter(arg);
       expect(argFormatted).toMatch(regex);
-      expect(consoleErrorSpy).not.toBeCalled();
+      expect(console.error).not.toBeCalled();
     }
   );
 
@@ -65,7 +57,7 @@ describe("lapRecordFormatter()", () => {
       const regex = /^\d{2}\.\d{3}$/;
       const argFormatted = lapRecordFormatter(arg);
       expect(argFormatted).toMatch(regex);
-      expect(consoleErrorSpy).not.toBeCalled();
+      expect(console.error).not.toBeCalled();
     }
   );
 });
@@ -83,8 +75,8 @@ describe("timestampFormatter()", () => {
 
   test("returns 'Invalid Date' and shows console.error if given invalid timestamp", () => {
     const argFormatted = timestampFormatter(9999999999999999);
-    expect(consoleErrorSpy).toBeCalledTimes(1);
-    expect(consoleErrorSpy).toBeCalledWith("Invalid Date");
+    expect(console.error).toBeCalledTimes(1);
+    expect(console.error).toBeCalledWith("Invalid Date");
     expect(argFormatted).toBe("Invalid Date");
   });
 });
