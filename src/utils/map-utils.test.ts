@@ -1,7 +1,7 @@
 import {
   initMapView,
   onRaceClickMapHandler,
-  changeNextRaceSymbology,
+  changeRacesSymbology,
   createPolylineBetweenRaces,
 } from "./map-utils";
 import * as utils from "./utils";
@@ -215,13 +215,13 @@ describe("onRaceMapClickHandler()", () => {
   });
 });
 
-describe("changeNextRaceSymbology()", () => {
+describe("changeRacesSymbology()", () => {
   test("sets Visual Variables on layers renderer", () => {
     const layer = {
       renderer: {},
     } as any;
 
-    changeNextRaceSymbology(layer, testData1);
+    changeRacesSymbology(layer, testData1);
     expect(layer.renderer.visualVariables).toBeDefined();
     expect(layer.renderer.visualVariables.length).toBe(2);
   });

@@ -4,7 +4,7 @@ import { useEffect, createContext, useRef, useState } from "react";
 import { RaceObj, RaceRefObj } from "./race-types";
 import {
   viewGoToRace,
-  changeNextRaceSymbology,
+  changeRacesSymbology,
   createPolylineBetweenRaces,
 } from "./utils/map-utils";
 import MapSpinner from "./components/MapSpinner";
@@ -80,11 +80,9 @@ function App() {
         const { view } = mapViewCtx;
         setIsLoading(true);
         const nextRace = getNextRace(racesArrCtx);
-        nextRace && changeNextRaceSymbology(mapViewCtx.layer, nextRace);
+        nextRace && changeRacesSymbology(mapViewCtx.layer, nextRace);
 
-        view.when(function () {
-          onViewInstanceCreated(view, racesArrCtx, nextRace);
-        });
+        view.when(() => onViewInstanceCreated(view, racesArrCtx, nextRace));
       } catch (err) {
         setIsLoading(false);
         if (err instanceof Error) {

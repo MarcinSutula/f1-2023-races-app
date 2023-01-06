@@ -2,13 +2,15 @@ import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { RefObject,  Dispatch, SetStateAction } from "react";
+import { RefObject, Dispatch, SetStateAction } from "react";
 import {
+  DEFAULT_RACE_SIZE,
   GO_TO_RACE_ANIMATION_DURATION,
   GO_TO_RACE_ANIMATION_EASING,
   GO_TO_RACE_ZOOM,
   MAX_SCALE,
   MIN_SCALE,
+  NEXT_RACE_SIZE,
 } from "../config";
 import { RaceObj, RaceRefObj } from "../race-types";
 import { getGeometry } from "./utils";
@@ -94,9 +96,8 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
   const { graphic } = hitTestResponse.results[0] as __esri.GraphicHit;
   const hitOid = graphic.attributes?.OBJECTID;
 
-  if (!hitOid) {
-    return;
-  } else if (
+  if (!hitOid) return;
+  else if (
     currentlySelectedRaceRef.current &&
     hitOid === currentlySelectedRaceRef.current.oid
   ) {
@@ -120,7 +121,7 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
   return { oid: hitOid, geometry: foundRace.geometry };
 };
 
-export const changeNextRaceSymbology = (
+export const changeRacesSymbology = (
   layer: FeatureLayer,
   nextRace: RaceObj
 ) => {
@@ -140,9 +141,9 @@ export const changeNextRaceSymbology = (
       showLegend: false,
     },
     maxDataValue: 1,
-    maxSize: "46px",
+    maxSize: NEXT_RACE_SIZE,
     minDataValue: 0,
-    minSize: "26px",
+    minSize: DEFAULT_RACE_SIZE,
   };
 
   const opacityVisualVariable = {
