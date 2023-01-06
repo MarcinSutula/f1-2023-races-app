@@ -2,36 +2,24 @@ import { testData1 } from "../testData";
 import { fetchAllRaces } from "./server-utils";
 import { BaseSchema } from "yup";
 
-const originalConsoleError = console.error;
-const originalYupIsValid = BaseSchema.prototype.isValid;
-let yupIsValidSpy: jest.SpyInstance;
-let consoleErrorSpy: jest.SpyInstance;
+jest
+  .spyOn(BaseSchema.prototype, "isValid")
+  .mockImplementation((racesResponse: object[]): Promise<boolean> => {
+    if (
+      !racesResponse ||
+      racesResponse.length < 1 ||
+      racesResponse[0].hasOwnProperty("randomAtr")
+    ) {
+      return Promise.resolve(false);
+    }
 
-const generateYupIsValidSpy = () =>
-  jest
-    .spyOn(BaseSchema.prototype, "isValid")
-    .mockImplementation((racesResponse: object[]): Promise<boolean> => {
-      if (
-        !racesResponse ||
-        racesResponse.length < 1 ||
-        racesResponse[0].hasOwnProperty("randomAtr")
-      ) {
-        return Promise.resolve(false);
-      }
+    return Promise.resolve(true);
+  });
 
-      return Promise.resolve(true);
-    });
+jest.spyOn(console, "error").mockImplementation((message) => message);
 
-const generateConsoleErrorSpy = () =>
-  jest.spyOn(console, "error").mockImplementation((message) => message);
-
-beforeEach(() => {
-  yupIsValidSpy = generateYupIsValidSpy();
-  consoleErrorSpy = generateConsoleErrorSpy();
-});
 afterEach(() => {
-  console.error = originalConsoleError;
-  BaseSchema.prototype.isValid = originalYupIsValid;
+  jest.clearAllMocks();
 });
 
 describe("fetchAllRaces()", () => {
@@ -50,8 +38,8 @@ describe("fetchAllRaces()", () => {
     };
 
     expect(await fetchAllRaces(layer as any)).toStrictEqual([testData1]);
-    expect(yupIsValidSpy).toBeCalledTimes(1);
-    expect(consoleErrorSpy).not.toBeCalled();
+    expect(BaseSchema.prototype.isValid).toBeCalledTimes(1);
+    expect(console.error).not.toBeCalled();
   });
 
   test("catches and shows correct console error if server request and so the response were incorrect", async () => {
@@ -62,9 +50,9 @@ describe("fetchAllRaces()", () => {
     };
 
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
-    expect(consoleErrorSpy).toBeCalledTimes(1);
-    expect(consoleErrorSpy).toBeCalledWith("Problem with fetching");
-    expect(yupIsValidSpy).not.toBeCalled();
+    expect(console.error).toBeCalledTimes(1);
+    expect(console.error).toBeCalledWith("Problem with fetching");
+    expect(BaseSchema.prototype.isValid).not.toBeCalled();
   });
 
   test("catches and shows correct console error if server response attributes were incorrect", async () => {
@@ -81,8 +69,8 @@ describe("fetchAllRaces()", () => {
       },
     };
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
-    expect(consoleErrorSpy).toBeCalledTimes(1);
-    expect(consoleErrorSpy).toBeCalledWith("Wrong server response");
-    expect(yupIsValidSpy).toBeCalledTimes(1);
+    expect(console.error).toBeCalledTimes(1);
+    expect(console.error).toBeCalledWith("Wrong server response");
+    expect(BaseSchema.prototype.isValid).toBeCalledTimes(1);
   });
 });
