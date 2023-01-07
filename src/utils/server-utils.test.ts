@@ -16,7 +16,7 @@ jest
     return Promise.resolve(true);
   });
 
-jest.spyOn(console, "error").mockImplementation((message) => message);
+jest.spyOn(console, "error").mockImplementation(() => {});
 
 afterEach(() => {
   jest.clearAllMocks();

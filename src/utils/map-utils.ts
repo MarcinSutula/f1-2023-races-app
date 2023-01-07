@@ -4,7 +4,9 @@ import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { RefObject, Dispatch, SetStateAction } from "react";
 import {
+  BASEMAP_ID,
   DEFAULT_RACE_SIZE,
+  FEATURELAYER_URL,
   GO_TO_RACE_ANIMATION_DURATION,
   GO_TO_RACE_ANIMATION_EASING,
   GO_TO_RACE_ZOOM,
@@ -45,11 +47,11 @@ export const initMapView = (
   mapDiv: HTMLDivElement
 ): { view: MapView; layer: FeatureLayer } => {
   const layer = new FeatureLayer({
-    url: process.env.REACT_APP_FEATURELAYER_URL,
+    url: FEATURELAYER_URL,
   });
   const webmap = new WebMap({
     portalItem: {
-      id: process.env.REACT_APP_BASEMAP_ID,
+      id: BASEMAP_ID,
     },
     layers: [layer],
   });
@@ -72,27 +74,35 @@ export const getRacesLayer = (
 ): __esri.FeatureLayer | undefined => {
   const layers = (view.map.layers as any).items as __esri.FeatureLayer[];
   const racesLayer = layers.find((layer) =>
-    process.env.REACT_APP_FEATURELAYER_URL?.includes(layer.url)
+    FEATURELAYER_URL.includes(layer.url)
   );
   return racesLayer ? racesLayer : undefined;
 };
 
-export const viewGoToRace: ViewGoToRaceFnType = (
+export const viewGoToRace: ViewGoToRaceFnType = async (
   view,
   raceGeometry,
   animation = true,
   zoom = true
 ) => {
-  const goToTarget: __esri.GoToTarget2D = {
-    geometry: raceGeometry,
-  };
-  if (zoom) goToTarget.zoom = GO_TO_RACE_ZOOM;
-  const goToOptions = {
-    duration: GO_TO_RACE_ANIMATION_DURATION,
-    easing: GO_TO_RACE_ANIMATION_EASING,
-  };
+  try {
+    const goToTarget: __esri.GoToTarget2D = {
+      geometry: raceGeometry,
+    };
+    if (zoom) goToTarget.zoom = GO_TO_RACE_ZOOM;
+    const goToOptions = {
+      duration: GO_TO_RACE_ANIMATION_DURATION,
+      easing: GO_TO_RACE_ANIMATION_EASING,
+    };
 
-  return view.goTo(goToTarget, animation ? goToOptions : undefined);
+    return await view.goTo(goToTarget, animation ? goToOptions : undefined);
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error(err.message);
+      return;
+    }
+    console.error("Unexpected error", err);
+  }
 };
 
 export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
@@ -103,32 +113,41 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
   setIsLoading,
   setClickedRaceObj
 ) => {
-  const { graphic } = hitTestResponse.results[0] as __esri.GraphicHit;
-  const hitOid = graphic.attributes?.OBJECTID;
+  try {
+    const { graphic } = hitTestResponse.results[0] as __esri.GraphicHit;
+    const hitOid = graphic.attributes?.OBJECTID;
 
-  if (!hitOid) return;
-  else if (
-    currentlySelectedRaceRef.current &&
-    hitOid === currentlySelectedRaceRef.current.oid
-  ) {
-    await viewGoToRace(
-      view,
-      currentlySelectedRaceRef.current.geometry,
-      false,
-      false
-    );
-    return;
-  }
-  setIsLoading(true);
-  const foundRace = races.find((race) => race.OBJECTID === hitOid);
-  if (!foundRace) {
+    if (!hitOid) return;
+    else if (
+      currentlySelectedRaceRef.current &&
+      hitOid === currentlySelectedRaceRef.current.oid
+    ) {
+      await viewGoToRace(
+        view,
+        currentlySelectedRaceRef.current.geometry,
+        false,
+        false
+      );
+      return;
+    }
+    setIsLoading(true);
+    const foundRace = races.find((race) => race.OBJECTID === hitOid);
+    if (!foundRace) {
+      setIsLoading(false);
+      throw new Error("Problem with finding matching race");
+    }
+    await viewGoToRace(view, foundRace.geometry);
+    setClickedRaceObj(foundRace);
     setIsLoading(false);
-    throw new Error("Problem with finding matching race");
+    return { oid: hitOid, geometry: foundRace.geometry };
+  } catch (err) {
+    setIsLoading(false);
+    if (err instanceof Error) {
+      console.error(err.message);
+      return;
+    }
+    console.error("Unexpected error", err);
   }
-  await viewGoToRace(view, foundRace.geometry);
-  setClickedRaceObj(foundRace);
-  setIsLoading(false);
-  return { oid: hitOid, geometry: foundRace.geometry };
 };
 
 export const changeRacesSymbology = (

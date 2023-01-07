@@ -19,12 +19,19 @@ function NavBtn({
   return (
     <button onClick={onClickHandler.bind("", mode)} disabled={disabled}>
       {mode === "back" ? (
-        <AiOutlineLeft color={disabled ? "grey" : basicColor} fontSize={size} />
+        <div aria-label="nav-btn-back">
+          <AiOutlineLeft
+            color={disabled ? "grey" : basicColor}
+            fontSize={size}
+          />
+        </div>
       ) : (
-        <AiOutlineRight
-          color={disabled ? "grey" : basicColor}
-          fontSize={size}
-        />
+        <div aria-label="nav-btn-next">
+          <AiOutlineRight
+            color={disabled ? "grey" : basicColor}
+            fontSize={size}
+          />
+        </div>
       )}
     </button>
   );

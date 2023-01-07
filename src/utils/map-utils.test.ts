@@ -3,8 +3,13 @@ import * as utils from "./utils";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { testData3, testData1, testData2 } from "../testData";
+import { testData1, testData2, testData3 } from "../testData";
 import { RaceRefObj } from "../race-types";
+import {
+  GO_TO_RACE_ANIMATION_DURATION,
+  GO_TO_RACE_ANIMATION_EASING,
+  GO_TO_RACE_ZOOM,
+} from "../config";
 
 const goToMock = jest.fn();
 
@@ -23,9 +28,10 @@ jest.mock("@arcgis/core/layers/FeatureLayer", () =>
 );
 
 describe("initMapView()", () => {
+  const container = document.createElement("div");
+  const viewLayer = mapUtils.initMapView(container);
+
   test("initializes view and renders map with layer", () => {
-    const container = document.createElement("div");
-    const viewLayer = mapUtils.initMapView(container);
     expect(FeatureLayer).toBeCalled();
     expect(WebMap).toBeCalled();
     expect(MapView).toBeCalled();
@@ -51,7 +57,7 @@ describe("onViewInstanceCreated()", () => {
     ],
   };
 
-  const races = [testData1, testData3, testData2];
+  const races = [testData1, testData2, testData3];
 
   const raceRefObj: { current: RaceRefObj | undefined } = {
     current: undefined,
@@ -124,6 +130,9 @@ describe("onViewInstanceCreated()", () => {
       mapUtils,
       "createPolylineBetweenRaces"
     );
+    const nextRaceIndex = races.findIndex(
+      (race) => race.OBJECTID === races[1].OBJECTID
+    );
     await mapUtils.onViewInstanceCreated(
       view,
       races,
@@ -132,10 +141,6 @@ describe("onViewInstanceCreated()", () => {
       setIsLoading,
       updateSelectedRace,
       () => {}
-    );
-
-    const nextRaceIndex = races.findIndex(
-      (race) => race.OBJECTID === races[1].OBJECTID
     );
 
     expect(createPolylineSpy).toBeCalledWith(
@@ -225,17 +230,21 @@ describe("onRaceMapClickHandler()", () => {
 
   test("switches between loading states and throws an error not having found a race in all races", async () => {
     hitTestResponse.results[0].graphic.attributes.OBJECTID = -1;
-
-    await expect(async () => {
-      await mapUtils.onRaceClickMapHandler(
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    await expect(
+      mapUtils.onRaceClickMapHandler(
         view,
         hitTestResponse,
         raceRefObj,
         races,
         setIsLoading,
         setClickedRaceObj
-      );
-    }).rejects.toThrow();
+      )
+    ).resolves.toBeUndefined();
+
+    expect(consoleErrorSpy).toBeCalledTimes(1);
     expect(setIsLoading).toBeCalledWith(true);
     expect(setIsLoading).lastCalledWith(false);
   });
@@ -363,7 +372,7 @@ describe("changeRacesSymbology()", () => {
   });
 });
 
-describe("createPolylineBetweenRaces", () => {
+describe("createPolylineBetweenRaces()", () => {
   const getGeometrySpy = jest.spyOn(utils, "getGeometry");
 
   test("creates a polyline between given two race objects", () => {
@@ -373,5 +382,58 @@ describe("createPolylineBetweenRaces", () => {
     expect(polyline.geometry).toBeDefined();
     expect(polyline.symbol).toBeDefined();
     expect(polyline.geometry.type).toBe("polyline");
+  });
+});
+
+describe("viewGoToRace()", () => {
+  const container = document.createElement("div");
+  const { view } = mapUtils.initMapView(container);
+  const raceGeometry = testData1.geometry;
+  const viewGoToSpy = jest.spyOn(view, "goTo");
+  const consoleErrorSpy = jest.spyOn(console, "error");
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("shows an error if view.goTo receives wrong target", async () => {
+    viewGoToSpy.mockImplementation(() => {
+      throw new Error();
+    });
+
+    await mapUtils.viewGoToRace(view, raceGeometry);
+
+    expect(viewGoToSpy).toBeCalled();
+    expect(consoleErrorSpy).toBeCalled();
+  });
+
+  test("sets animation as undefined on view.goTo if animation === false", async () => {
+    await mapUtils.viewGoToRace(view, raceGeometry, false, true);
+
+    expect(viewGoToSpy).toBeCalledWith(expect.anything(), undefined);
+  });
+
+  test("does not set zoom on view.goTo if zoom === false", async () => {
+    await mapUtils.viewGoToRace(view, raceGeometry, true, false);
+
+    expect(viewGoToSpy).not.toBeCalledWith(
+      { geometry: raceGeometry, zoom: expect.anything() },
+      expect.anything()
+    );
+  });
+
+  test("sets both animation and zoom if optional arguments are not given", async () => {
+    const goToTarget = {
+      geometry: raceGeometry,
+      zoom: GO_TO_RACE_ZOOM,
+    };
+    const goToOptions = {
+      duration: GO_TO_RACE_ANIMATION_DURATION,
+      easing: GO_TO_RACE_ANIMATION_EASING,
+    };
+
+    await mapUtils.viewGoToRace(view, raceGeometry);
+
+    expect(viewGoToSpy).toBeCalledWith(goToTarget, goToOptions);
   });
 });
