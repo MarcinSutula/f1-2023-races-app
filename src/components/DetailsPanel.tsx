@@ -5,11 +5,12 @@ import PanelTitle from "./PanelTitle";
 import PanelImage from "../PanelImage";
 import EventDate from "./EventDate";
 import RaceLocation from "./RaceLocation";
-import CircuitDetailsBtn from "./CircuitDetailsBtn";
+import CircuitLayoutBtn from "./CircuitLayoutBtn";
 import RaceCounter from "./RaceCounter";
 import { lapRecordInfoFormatter } from "../utils/utils";
 import PanelCard from "./PanelCard";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useMapViewContext } from "../context/MapViewContext";
 
 type DetailsPanelProps = {
   clickedRaceObj: RaceObj;
@@ -24,6 +25,21 @@ function DetailsPanel({
   isLoading,
   setIsLoading,
 }: DetailsPanelProps) {
+  const [isCircuitGraphicVisible, setIsCircuitGraphicVisible] =
+    useState<boolean>(false);
+  const [isMapInAnimation, setIsMapInAnimation] = useState<boolean>(false);
+  const mapViewCtx = useMapViewContext();
+  const isCircuitGraphicVisibleHandler = (bool: boolean): void =>
+    setIsCircuitGraphicVisible(bool);
+
+  useEffect(() => {
+    if (!mapViewCtx) return;
+    const watchAnimationHandler = mapViewCtx.view.watch("animation", (res) => {
+      res ? setIsMapInAnimation(true) : setIsMapInAnimation(false);
+    });
+    return () => watchAnimationHandler.remove();
+  }, [mapViewCtx]);
+
   return (
     <PanelCard>
       <div className="flex justify-between align-middle mb-2">
@@ -33,6 +49,8 @@ function DetailsPanel({
           setClickedRaceObj={setClickedRaceObj}
           setIsLoading={setIsLoading}
           isLoading={isLoading}
+          isCircuitGraphicVisible={isCircuitGraphicVisible}
+          isMapInAnimation={isMapInAnimation}
         />
       </div>
       <PanelTitle title={clickedRaceObj.name} />
@@ -85,7 +103,13 @@ function DetailsPanel({
             )}
           />
         )}
-      <CircuitDetailsBtn />
+      <CircuitLayoutBtn
+        setIsLoading={setIsLoading}
+        isLoading={isLoading}
+        clickedRaceObj={clickedRaceObj}
+        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleHandler}
+        isMapInAnimation={isMapInAnimation}
+      />
     </PanelCard>
   );
 }

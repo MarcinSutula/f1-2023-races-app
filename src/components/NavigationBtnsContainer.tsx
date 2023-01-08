@@ -1,4 +1,8 @@
-import { useContext, Dispatch, SetStateAction } from "react";
+import {
+  useContext,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { UpdateSelectedRaceContext } from "../App";
 import { useMapViewContext } from "../context/MapViewContext";
 import { useRacesArrContext } from "../context/RacesArrContext";
@@ -11,6 +15,8 @@ type NavigationBtnsProps = {
   setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>;
   isLoading: boolean;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
+  isCircuitGraphicVisible: boolean;
+  isMapInAnimation: boolean;
 };
 
 export type NavigationMode = "back" | "next";
@@ -20,18 +26,27 @@ function NavigationBtnsContainer({
   setClickedRaceObj,
   setIsLoading,
   isLoading,
+  isCircuitGraphicVisible,
+  isMapInAnimation
 }: NavigationBtnsProps) {
   const mapViewCtx = useMapViewContext();
   const racesArrCtx = useRacesArrContext();
   const updateSelectedRaceCtx = useContext(UpdateSelectedRaceContext);
 
-  const isBackBtnDisabled = racesArrCtx?.at(0)?.OBJECTID === clickedRaceOid;
-  const isNextBtnDisabled = racesArrCtx?.at(-1)?.OBJECTID === clickedRaceOid;
+
+  const isBtnDisabled = (mode: NavigationMode) => {
+    const isBtnDisabled =
+      mode === "back"
+        ? racesArrCtx?.at(0)?.OBJECTID === clickedRaceOid
+        : racesArrCtx?.at(-1)?.OBJECTID === clickedRaceOid;
+    return (
+      isLoading || isCircuitGraphicVisible || isMapInAnimation || isBtnDisabled
+    );
+  };
 
   const navigationHandler = async (mode: NavigationMode) => {
     try {
-      const isDisabled =
-        mode === "next" ? isNextBtnDisabled : isBackBtnDisabled;
+      const isDisabled = isBtnDisabled(mode);
 
       if (!mapViewCtx || !racesArrCtx || isDisabled)
         throw new Error("Problem with initializing navigation");
@@ -67,18 +82,22 @@ function NavigationBtnsContainer({
     }
   };
 
+  
+
+
+
   return (
     <div className="m-2 p-2">
       <NavBtn
         mode="back"
-        disabled={isLoading || isBackBtnDisabled}
+        disabled={isBtnDisabled("back")}
         onClickHandler={navigationHandler}
         basicColor="red"
         size={40}
       />
       <NavBtn
         mode="next"
-        disabled={isLoading || isNextBtnDisabled}
+        disabled={isBtnDisabled("next")}
         onClickHandler={navigationHandler}
         basicColor="red"
         size={40}

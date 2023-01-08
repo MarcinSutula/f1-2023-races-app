@@ -14,6 +14,7 @@ export const testData1 = {
   start_date: 1685664000000,
   lap_record_owner: "Max Verstappen",
   lap_record_year: 2021,
+  rel_id: 1,
   geometry: {
     spatialReference: {
       latestWkid: 3857,
@@ -43,6 +44,7 @@ export const testData2 = {
   start_date: 1688083200000,
   lap_record_owner: "Carlos Sainz",
   lap_record_year: 2020,
+  rel_id: 2,
   geometry: {
     spatialReference: {
       latestWkid: 3857,
@@ -72,6 +74,7 @@ export const testData3 = {
   start_date: 1700092800000,
   lap_record_owner: null,
   lap_record_year: null,
+  rel_id: 3,
   geometry: {
     spatialReference: {
       latestWkid: 3857,

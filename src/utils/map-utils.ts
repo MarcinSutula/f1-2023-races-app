@@ -49,12 +49,19 @@ export const initMapView = (
   const layer = new FeatureLayer({
     url: FEATURELAYER_URL,
   });
+
+  // const layer2 = new FeatureLayer({
+  //   url: "https://services.arcgis.com/zg6BBB0wvjzrRBLk/arcgis/rest/services/F1_2023_Calendar/FeatureServer/2",
+  // });
   const webmap = new WebMap({
     portalItem: {
       id: BASEMAP_ID,
     },
     layers: [layer],
   });
+
+  // layer2.visible = false;
+
   const newView = new MapView({
     container: mapDiv,
     map: webmap,
@@ -217,7 +224,6 @@ export const createPolylineBetweenRaces = (
   const polylineGraphic = new Graphic({
     geometry: polyline as __esri.GeometryProperties,
     symbol: lineSymbol,
-    popupTemplate: undefined,
   });
 
   return polylineGraphic;

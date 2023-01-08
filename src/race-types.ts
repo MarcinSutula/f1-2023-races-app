@@ -13,6 +13,7 @@ export type RaceObj = {
   start_date: EpochTimeStamp;
   lap_record_owner: string | null;
   lap_record_year: number | null;
+  rel_id: number;
 };
 
 export type RaceRefObj = {

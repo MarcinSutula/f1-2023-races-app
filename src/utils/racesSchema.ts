@@ -23,7 +23,9 @@ export const raceObjSchema = yup
       .required(),
     lap_record_owner: yup.string().nullable().defined(),
     lap_record_year: yup.number().nullable().defined(),
+    rel_id: yup.number().required().positive(),
   })
+  .noUnknown()
   .required();
 
 export const racesSchema = yup.array().of(raceObjSchema).length(RACES_NUM);

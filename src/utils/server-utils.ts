@@ -17,7 +17,10 @@ export const fetchAllRaces = async (layer: __esri.FeatureLayer) => {
       return { ...feature.attributes, geometry: feature.geometry };
     });
 
-    const isResponseValid = await racesSchema.isValid(racesResponse);
+    const isResponseValid = await racesSchema.isValid(racesResponse, {
+      stripUnknown: false,
+    });
+
     if (!isResponseValid) {
       throw new Error("Wrong server response");
     }
