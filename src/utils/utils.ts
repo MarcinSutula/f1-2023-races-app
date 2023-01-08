@@ -77,3 +77,10 @@ export const getGeometry = (
   geometry.get(mode === "lng,lat" ? "longitude" : "x"),
   geometry.get(mode === "lng,lat" ? "latitude" : "y"),
 ];
+
+export const removeZoomFromUI = (view: __esri.MapView): void => {
+  const filteredUIComponents = view.ui.components.filter(
+    (cmp) => cmp !== "zoom"
+  );
+  view.ui.components = filteredUIComponents;
+};

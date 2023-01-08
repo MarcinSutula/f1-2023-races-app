@@ -1,13 +1,9 @@
-import {
-  useContext,
-  Dispatch,
-  SetStateAction,
-} from "react";
+import { useContext, Dispatch, SetStateAction } from "react";
 import { UpdateSelectedRaceContext } from "../App";
 import { useMapViewContext } from "../context/MapViewContext";
 import { useRacesArrContext } from "../context/RacesArrContext";
 import { RaceObj } from "../race-types";
-import { viewGoToRace } from "../utils/map-utils";
+import { viewGoToGeometry } from "../utils/map-utils";
 import NavBtn from "./NavBtn";
 
 type NavigationBtnsProps = {
@@ -27,14 +23,13 @@ function NavigationBtnsContainer({
   setIsLoading,
   isLoading,
   isCircuitGraphicVisible,
-  isMapInAnimation
+  isMapInAnimation,
 }: NavigationBtnsProps) {
   const mapViewCtx = useMapViewContext();
   const racesArrCtx = useRacesArrContext();
   const updateSelectedRaceCtx = useContext(UpdateSelectedRaceContext);
 
-
-  const isBtnDisabled = (mode: NavigationMode) => {
+  const isBtnDisabled = (mode: NavigationMode): boolean => {
     const isBtnDisabled =
       mode === "back"
         ? racesArrCtx?.at(0)?.OBJECTID === clickedRaceOid
@@ -56,15 +51,14 @@ function NavigationBtnsContainer({
       const clickedRaceIndex = racesArrCtx.findIndex(
         (race) => race.OBJECTID === clickedRaceOid
       );
-      if (clickedRaceIndex === -1) {
-        setIsLoading(false);
+      if (clickedRaceIndex === -1)
         throw new Error("Problem with finding selected race");
-      }
+
       const followingRaceIndex =
         mode === "next" ? clickedRaceIndex + 1 : clickedRaceIndex - 1;
 
       const followingRace = racesArrCtx[followingRaceIndex];
-      await viewGoToRace(view, followingRace.geometry);
+      await viewGoToGeometry(view, followingRace.geometry);
       setClickedRaceObj(followingRace);
       updateSelectedRaceCtx &&
         updateSelectedRaceCtx({
@@ -81,10 +75,6 @@ function NavigationBtnsContainer({
       console.error("Unexpected error", err);
     }
   };
-
-  
-
-
 
   return (
     <div className="m-2 p-2">

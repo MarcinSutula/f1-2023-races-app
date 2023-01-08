@@ -20,3 +20,8 @@ export type RaceRefObj = {
   oid: RaceObj["OBJECTID"];
   geometry: RaceObj["geometry"];
 };
+
+export type CircuitObj = {
+  geometry: __esri.Geometry;
+  attributes: object;
+};

@@ -51,7 +51,7 @@ describe("fetchAllRaces()", () => {
 
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
     expect(console.error).toBeCalledTimes(1);
-    expect(console.error).toBeCalledWith("Problem with fetching");
+    expect(console.error).toBeCalledWith("Problem with fetching all races");
     expect(BaseSchema.prototype.isValid).not.toBeCalled();
   });
 
@@ -70,7 +70,7 @@ describe("fetchAllRaces()", () => {
     };
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
     expect(console.error).toBeCalledTimes(1);
-    expect(console.error).toBeCalledWith("Wrong server response");
+    expect(console.error).toBeCalledWith("Wrong server response (races)");
     expect(BaseSchema.prototype.isValid).toBeCalledTimes(1);
   });
 });

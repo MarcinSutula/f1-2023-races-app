@@ -1,21 +1,18 @@
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
-import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { RefObject, Dispatch, SetStateAction } from "react";
 import {
   BASEMAP_ID,
-  DEFAULT_RACE_SIZE,
   FEATURELAYER_URL,
   GO_TO_RACE_ANIMATION_DURATION,
   GO_TO_RACE_ANIMATION_EASING,
   GO_TO_RACE_ZOOM,
   MAX_SCALE,
   MIN_SCALE,
-  NEXT_RACE_SIZE,
 } from "../config";
 import { RaceObj, RaceRefObj } from "../race-types";
-import { getGeometry } from "./utils";
+import { createPolylineBetweenRaces } from "./graphic-utils";
 
 type OnRaceMapClickHandlerFnType = (
   view: __esri.MapView,
@@ -27,7 +24,7 @@ type OnRaceMapClickHandlerFnType = (
 ) => Promise<RaceRefObj | void>;
 
 type OnViewInstanceCreatedFnType = (
-  view: __esri.MapView,
+  view: MapView,
   races: RaceObj[],
   nextRace: RaceObj | undefined,
   setClickedRaceObj: Dispatch<SetStateAction<RaceObj | undefined>>,
@@ -36,11 +33,11 @@ type OnViewInstanceCreatedFnType = (
   callback: () => void
 ) => Promise<void>;
 
-type ViewGoToRaceFnType = (
-  view: __esri.MapView,
+type viewGoToGeometryFnType = (
+  view: MapView,
   raceGeometry: __esri.Geometry,
   animation?: boolean,
-  zoom?: boolean
+  zoom?: boolean | number
 ) => Promise<void>;
 
 export const initMapView = (
@@ -50,17 +47,12 @@ export const initMapView = (
     url: FEATURELAYER_URL,
   });
 
-  // const layer2 = new FeatureLayer({
-  //   url: "https://services.arcgis.com/zg6BBB0wvjzrRBLk/arcgis/rest/services/F1_2023_Calendar/FeatureServer/2",
-  // });
   const webmap = new WebMap({
     portalItem: {
       id: BASEMAP_ID,
     },
     layers: [layer],
   });
-
-  // layer2.visible = false;
 
   const newView = new MapView({
     container: mapDiv,
@@ -78,25 +70,27 @@ export const initMapView = (
 
 export const getRacesLayer = (
   view: __esri.MapView
-): __esri.FeatureLayer | undefined => {
-  const layers = (view.map.layers as any).items as __esri.FeatureLayer[];
+): FeatureLayer | undefined => {
+  const layers = (view.map.layers as any).items as FeatureLayer[];
   const racesLayer = layers.find((layer) =>
     FEATURELAYER_URL.includes(layer.url)
   );
   return racesLayer ? racesLayer : undefined;
 };
 
-export const viewGoToRace: ViewGoToRaceFnType = async (
+export const viewGoToGeometry: viewGoToGeometryFnType = async (
   view,
-  raceGeometry,
+  geometry,
   animation = true,
   zoom = true
 ) => {
   try {
     const goToTarget: __esri.GoToTarget2D = {
-      geometry: raceGeometry,
+      geometry,
     };
-    if (zoom) goToTarget.zoom = GO_TO_RACE_ZOOM;
+    if (zoom) {
+      goToTarget.zoom = zoom === true ? GO_TO_RACE_ZOOM : zoom;
+    }
     const goToOptions = {
       duration: GO_TO_RACE_ANIMATION_DURATION,
       easing: GO_TO_RACE_ANIMATION_EASING,
@@ -129,7 +123,7 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
       currentlySelectedRaceRef.current &&
       hitOid === currentlySelectedRaceRef.current.oid
     ) {
-      await viewGoToRace(
+      await viewGoToGeometry(
         view,
         currentlySelectedRaceRef.current.geometry,
         false,
@@ -139,11 +133,8 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
     }
     setIsLoading(true);
     const foundRace = races.find((race) => race.OBJECTID === hitOid);
-    if (!foundRace) {
-      setIsLoading(false);
-      throw new Error("Problem with finding matching race");
-    }
-    await viewGoToRace(view, foundRace.geometry);
+    if (!foundRace) throw new Error("Problem with finding matching race");
+    await viewGoToGeometry(view, foundRace.geometry);
     setClickedRaceObj(foundRace);
     setIsLoading(false);
     return { oid: hitOid, geometry: foundRace.geometry };
@@ -157,78 +148,6 @@ export const onRaceClickMapHandler: OnRaceMapClickHandlerFnType = async (
   }
 };
 
-export const changeRacesSymbology = (
-  layer: FeatureLayer,
-  nextRace: RaceObj
-) => {
-  const arcadeExpression = `
-  var RaceOid = $feature.OBJECTID;
-  when(
-    RaceOid == ${nextRace.OBJECTID}, 1,
-    0
-  );
-  `;
-
-  const sizeVisualVariable = {
-    type: "size",
-    valueExpression: arcadeExpression,
-    valueExpressionTitle: "Size Value",
-    legendOptions: {
-      showLegend: false,
-    },
-    maxDataValue: 1,
-    maxSize: NEXT_RACE_SIZE,
-    minDataValue: 0,
-    minSize: DEFAULT_RACE_SIZE,
-  };
-
-  const opacityVisualVariable = {
-    type: "opacity",
-    valueExpression: arcadeExpression,
-    valueExpressionTitle: "Opacity Value",
-    legendOptions: {
-      showLegend: false,
-    },
-    stops: [
-      { value: 0, opacity: 0.7, label: "Not a next race" },
-      { value: 1, opacity: 1, label: "Next race" },
-    ],
-  };
-
-  (layer.renderer as any).visualVariables = [
-    sizeVisualVariable,
-    opacityVisualVariable,
-  ];
-};
-
-export const createPolylineBetweenRaces = (
-  previousRace: RaceObj,
-  nextRace: RaceObj
-): Graphic => {
-  const startPoint = getGeometry(previousRace.geometry, "lng,lat");
-  const endPoint = getGeometry(nextRace.geometry, "lng,lat");
-
-  const polyline = {
-    type: "polyline",
-    paths: [startPoint, endPoint],
-  };
-
-  const lineSymbol = {
-    type: "simple-line",
-    style: "short-dot",
-    cap: "round",
-    color: [255, 255, 255, 0.5],
-    width: 2,
-  };
-
-  const polylineGraphic = new Graphic({
-    geometry: polyline as __esri.GeometryProperties,
-    symbol: lineSymbol,
-  });
-
-  return polylineGraphic;
-};
-
 export const onViewInstanceCreated: OnViewInstanceCreatedFnType = async (
   view,
   races,
@@ -238,26 +157,35 @@ export const onViewInstanceCreated: OnViewInstanceCreatedFnType = async (
   updateSelectedRace,
   callback
 ) => {
-  if (nextRace) {
-    setClickedRaceObj(nextRace);
-    updateSelectedRace({
-      oid: nextRace.OBJECTID,
-      geometry: nextRace.geometry,
-    });
-    await viewGoToRace(view, nextRace.geometry);
-    const nextRaceIndex = races.findIndex(
-      (race) => race.OBJECTID === nextRace.OBJECTID
-    );
-    if (nextRaceIndex !== 0) {
-      const polyline = createPolylineBetweenRaces(
-        races[nextRaceIndex - 1],
-        nextRace
+  try {
+    if (nextRace) {
+      setClickedRaceObj(nextRace);
+      updateSelectedRace({
+        oid: nextRace.OBJECTID,
+        geometry: nextRace.geometry,
+      });
+      await viewGoToGeometry(view, nextRace.geometry);
+      const nextRaceIndex = races.findIndex(
+        (race) => race.OBJECTID === nextRace.OBJECTID
       );
-      view.graphics.add(polyline);
+      if (nextRaceIndex !== 0) {
+        const polyline = createPolylineBetweenRaces(
+          races[nextRaceIndex - 1],
+          nextRace
+        );
+        view.graphics.add(polyline);
+      }
     }
+    callback();
+    setIsLoading(false);
+  } catch (err) {
+    setIsLoading(false);
+    if (err instanceof Error) {
+      console.error(err.message);
+      return;
+    }
+    console.error("Unexpected error", err);
   }
-  callback();
-  setIsLoading(false);
 };
 
 // export const calculatePointAlongLine = (start: any, end: any, ratio: any) => {

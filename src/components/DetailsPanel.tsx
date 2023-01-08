@@ -34,9 +34,9 @@ function DetailsPanel({
 
   useEffect(() => {
     if (!mapViewCtx) return;
-    const watchAnimationHandler = mapViewCtx.view.watch("animation", (res) => {
-      res ? setIsMapInAnimation(true) : setIsMapInAnimation(false);
-    });
+    const watchAnimationHandler = mapViewCtx.view.watch("animation", (res) =>
+      res ? setIsMapInAnimation(true) : setIsMapInAnimation(false)
+    );
     return () => watchAnimationHandler.remove();
   }, [mapViewCtx]);
 

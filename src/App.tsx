@@ -2,12 +2,13 @@ import "./App.css";
 import DetailsPanel from "./components/DetailsPanel";
 import { useEffect, createContext, useRef, useState } from "react";
 import { RaceObj, RaceRefObj } from "./race-types";
-import { changeRacesSymbology, onViewInstanceCreated } from "./utils/map-utils";
+import { onViewInstanceCreated } from "./utils/map-utils";
 import MapSpinner from "./components/MapSpinner";
 import { onRaceClickMapHandler } from "./utils/map-utils";
 import { getNextRace } from "./utils/utils";
 import { useMapViewContext } from "./context/MapViewContext";
 import { useRacesArrContext } from "./context/RacesArrContext";
+import { changeRacesSymbology } from "./utils/graphic-utils";
 
 export const UpdateSelectedRaceContext =
   createContext<((raceRefObj: RaceRefObj) => void) | undefined>(undefined);

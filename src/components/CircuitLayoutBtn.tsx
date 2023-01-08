@@ -1,12 +1,10 @@
 import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { useMapViewContext } from "../context/MapViewContext";
-import { RaceObj } from "../race-types";
-import Graphic from "@arcgis/core/Graphic";
-import {
-  GO_TO_RACE_ANIMATION_DURATION,
-  GO_TO_RACE_ANIMATION_EASING,
-} from "../config";
-import { viewGoToRace } from "../utils/map-utils";
+import { CircuitObj, RaceObj } from "../race-types";
+import { viewGoToGeometry } from "../utils/map-utils";
+import { createCircuitPolyline } from "../utils/graphic-utils";
+import { fetchRelatedCircuit } from "../utils/server-utils";
+import { removeZoomFromUI } from "../utils/utils";
 
 type CircuitLayoutBtnProps = {
   isLoading: boolean;
@@ -23,69 +21,57 @@ function CircuitLayoutBtn({
   isCircuitGraphicVisibleHandler,
   isMapInAnimation,
 }: CircuitLayoutBtnProps) {
-  const [circuitGraphic, setCircuitGraphic] = useState<any>();
+  const [circuitGraphic, setCircuitGraphic] = useState<__esri.Graphic>();
   const mapView = useMapViewContext();
 
   const isBtnDisabled = isLoading || isMapInAnimation;
 
   const onCircuitLayoutBtnClickHandler = async () => {
-    if (!mapView) return;
-    setIsLoading(true);
+    try {
+      if (!mapView || !mapView.view || !mapView.layer) return;
+      const { view, layer } = mapView;
+      setIsLoading(true);
+      if (!circuitGraphic) {
+        const circuitObj: CircuitObj | undefined = await fetchRelatedCircuit(
+          layer,
+          clickedRaceObj.rel_id
+        );
 
-    if (!circuitGraphic) {
-      const circuitObj = await mapView.layer.queryRelatedFeatures({
-        where: `rel_id_child=${clickedRaceObj.rel_id}`,
-        relationshipId: mapView.layer.relationships[0].id,
-        outFields: ["*"],
-        returnGeometry: true,
-      });
+        if (!circuitObj) throw new Error("Could not find related circuit");
+        const circuitPolyline = createCircuitPolyline(circuitObj.geometry);
 
-      const circuitGeometry =
-        circuitObj[clickedRaceObj.rel_id].features[0].geometry;
-      const lineSymbol = {
-        type: "simple-line",
-        color: "red",
-        width: 5,
-      };
-      console.log(circuitObj);
+        removeZoomFromUI(view);
+        await viewGoToGeometry(view, circuitObj.geometry, true, 14);
+        layer.visible = false;
+        view.graphics.add(circuitPolyline);
 
-      const newCircuitGraphic = new Graphic({
-        geometry: circuitGeometry,
-        symbol: lineSymbol,
-      });
+        setCircuitGraphic(circuitPolyline);
+        isCircuitGraphicVisibleHandler(true);
+      } else {
+        view.graphics.remove(circuitGraphic);
+        await viewGoToGeometry(mapView.view, clickedRaceObj.geometry);
+        layer.visible = true;
+        view.ui.components = [...view.ui.components, "zoom"];
 
-      const goToOptions = {
-        duration: GO_TO_RACE_ANIMATION_DURATION,
-        easing: GO_TO_RACE_ANIMATION_EASING,
-      };
-      mapView.view.ui.components = ["attribution"];
-      await mapView.view.goTo(
-        { geometry: circuitGeometry, zoom: 14.8 },
-        goToOptions
-      );
-      mapView.layer.visible = false;
-      mapView.view.graphics.add(newCircuitGraphic);
-
-      console.log(mapView.view);
-      setCircuitGraphic(newCircuitGraphic);
-      isCircuitGraphicVisibleHandler(true);
-    } else {
-      mapView.view.graphics.remove(circuitGraphic);
-      await viewGoToRace(mapView.view, clickedRaceObj.geometry);
-      mapView.layer.visible = true;
-      mapView.view.ui.components = ["attribution", "zoom"];
-      setCircuitGraphic(undefined);
-      isCircuitGraphicVisibleHandler(false);
+        setCircuitGraphic(undefined);
+        isCircuitGraphicVisibleHandler(false);
+      }
+      setIsLoading(false);
+    } catch (err) {
+      setIsLoading(false);
+      if (err instanceof Error) {
+        console.error(err.message);
+        return;
+      }
+      console.error("Unexpected error", err);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
-    if (!mapView) return;
-    console.log("useffect circuit layout");
+    if (!mapView || !mapView.view) return;
     const viewNavLockHandler = mapView.view.on(
       ["click", "drag", "double-click", "mouse-wheel", "hold"] as any,
-      function (event: any) {
+      function (event: __esri.ViewClickEvent) {
         circuitGraphic && event.stopPropagation();
       }
     );
