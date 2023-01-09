@@ -78,9 +78,21 @@ export const getGeometry = (
   geometry.get(mode === "lng,lat" ? "latitude" : "y"),
 ];
 
-export const removeZoomFromUI = (view: __esri.MapView): void => {
-  const filteredUIComponents = view.ui.components.filter(
-    (cmp) => cmp !== "zoom"
-  );
-  view.ui.components = filteredUIComponents;
+export const toggleUIZoom = (view: __esri.MapView): void => {
+  const zoomName = "zoom";
+
+  const isZoomOn = view.ui.components.find((cmp) => cmp === zoomName);
+
+  if (isZoomOn) {
+    const filteredUIComponents = view.ui.components.filter(
+      (cmp) => cmp !== zoomName
+    );
+    view.ui.components = filteredUIComponents;
+  } else {
+    view.ui.components = [...view.ui.components, zoomName];
+  }
+};
+
+export const toggleLayerVisible = (layer: __esri.FeatureLayer) => {
+  layer.visible = !layer.visible;
 };

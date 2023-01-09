@@ -3,11 +3,11 @@ import * as graphicUtils from "./graphic-utils";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { testData1, testData2, testData3 } from "../testData";
+import { testRace1, testRace2, testRace3 } from "../testRacesData";
 import { RaceRefObj } from "../race-types";
 import {
-  GO_TO_RACE_ANIMATION_DURATION,
-  GO_TO_RACE_ANIMATION_EASING,
+  GO_TO_ANIMATION_DURATION,
+  GO_TO_ANIMATION_EASING,
   GO_TO_RACE_ZOOM,
 } from "../config";
 
@@ -50,14 +50,14 @@ describe("onViewInstanceCreated()", () => {
       {
         graphic: {
           attributes: {
-            OBJECTID: testData1.OBJECTID,
+            OBJECTID: testRace1.OBJECTID,
           },
         },
       },
     ],
   };
 
-  const races = [testData1, testData2, testData3];
+  const races = [testRace1, testRace2, testRace3];
 
   const raceRefObj: { current: RaceRefObj | undefined } = {
     current: undefined,
@@ -66,16 +66,16 @@ describe("onViewInstanceCreated()", () => {
   const setIsLoading = jest.fn();
   const setClickedRaceObj = jest.fn();
   const updateSelectedRace = jest.fn();
+  const callback = jest.fn();
+  const polylineSpy = jest.spyOn(graphicUtils, "createPolylineBetweenRaces");
 
   afterEach(() => {
     raceRefObj.current = undefined;
-    hitTestResponse.results[0].graphic.attributes.OBJECTID = testData1.OBJECTID;
+    hitTestResponse.results[0].graphic.attributes.OBJECTID = testRace1.OBJECTID;
     jest.clearAllMocks();
   });
 
   test("calls callback and switches loading state when next race is defined", async () => {
-    const callback = jest.fn();
-
     await mapUtils.onViewInstanceCreated(
       view,
       races,
@@ -86,13 +86,11 @@ describe("onViewInstanceCreated()", () => {
       callback
     );
 
-    expect(callback).toBeCalled();
+    expect(callback).toBeCalledTimes(1);
     expect(setIsLoading).toBeCalledWith(false);
   });
 
   test("calls callback and switches loading state when next race is undefined", async () => {
-    const callback = jest.fn();
-
     await mapUtils.onViewInstanceCreated(
       view,
       races,
@@ -108,10 +106,6 @@ describe("onViewInstanceCreated()", () => {
   });
 
   test("if next race is defined and it's first race of a season (response from server is sorted), does not create polyline", async () => {
-    const createPolylineSpy = jest.spyOn(
-      graphicUtils,
-      "createPolylineBetweenRaces"
-    );
     await mapUtils.onViewInstanceCreated(
       view,
       races,
@@ -119,17 +113,13 @@ describe("onViewInstanceCreated()", () => {
       setClickedRaceObj,
       setIsLoading,
       updateSelectedRace,
-      () => {}
+      callback
     );
 
-    expect(createPolylineSpy).not.toBeCalled();
+    expect(polylineSpy).not.toBeCalled();
   });
 
   test("if next race is defined and it's NOT first race of a season (response from server is sorted), creates polyline", async () => {
-    const createPolylineSpy = jest.spyOn(
-      graphicUtils,
-      "createPolylineBetweenRaces"
-    );
     const nextRaceIndex = races.findIndex(
       (race) => race.OBJECTID === races[1].OBJECTID
     );
@@ -140,13 +130,10 @@ describe("onViewInstanceCreated()", () => {
       setClickedRaceObj,
       setIsLoading,
       updateSelectedRace,
-      () => {}
+      callback
     );
 
-    expect(createPolylineSpy).toBeCalledWith(
-      races[nextRaceIndex - 1],
-      races[1]
-    );
+    expect(polylineSpy).toBeCalledWith(races[nextRaceIndex - 1], races[1]);
   });
 
   test("if next race is defined, set it as clicked, update selected race and go to it on map", async () => {
@@ -158,7 +145,7 @@ describe("onViewInstanceCreated()", () => {
       setClickedRaceObj,
       setIsLoading,
       updateSelectedRace,
-      () => {}
+      callback
     );
 
     expect(setClickedRaceObj).toBeCalledWith(races[0]);
@@ -178,14 +165,14 @@ describe("onRaceMapClickHandler()", () => {
       {
         graphic: {
           attributes: {
-            OBJECTID: testData1.OBJECTID,
+            OBJECTID: testRace1.OBJECTID,
           },
         },
       },
     ],
   };
 
-  const races = [testData1, testData3, testData2];
+  const races = [testRace1, testRace2, testRace3];
 
   const raceRefObj: { current: RaceRefObj | undefined } = {
     current: undefined,
@@ -193,46 +180,50 @@ describe("onRaceMapClickHandler()", () => {
 
   const setIsLoading = jest.fn();
   const setClickedRaceObj = jest.fn();
+  const consoleErrorSpy = jest
+    .spyOn(console, "error")
+    .mockImplementation(() => {});
+  const viewGoToGeometrySpy = jest.spyOn(mapUtils, "viewGoToGeometry");
 
   afterEach(() => {
     raceRefObj.current = undefined;
-    hitTestResponse.results[0].graphic.attributes.OBJECTID = testData1.OBJECTID;
+    hitTestResponse.results[0].graphic.attributes.OBJECTID = testRace1.OBJECTID;
     jest.clearAllMocks();
   });
 
   test("returns undefined having selected not an object", async () => {
     hitTestResponse.results[0].graphic.attributes = {};
 
-    const clickedRace = await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
-
-    expect(clickedRace).toBeUndefined();
+    await expect(
+      mapUtils.onRaceClickMapHandler(
+        view,
+        hitTestResponse,
+        raceRefObj,
+        races,
+        setIsLoading,
+        setClickedRaceObj
+      )
+    ).resolves.toBeUndefined();
   });
 
-  test("switches between loading states having selected a different or new race", async () => {
-    await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
+  test("switches between loading states having selected a different or new race and returns defined", async () => {
+    await expect(
+      mapUtils.onRaceClickMapHandler(
+        view,
+        hitTestResponse,
+        raceRefObj,
+        races,
+        setIsLoading,
+        setClickedRaceObj
+      )
+    ).resolves.toBeDefined();
     expect(setIsLoading).toBeCalledWith(true);
     expect(setIsLoading).lastCalledWith(false);
   });
 
-  test("switches between loading states and throws an error not having found a race in all races", async () => {
+  test("switches between loading states and throws an error not having found a race in all races and returns undefined", async () => {
     hitTestResponse.results[0].graphic.attributes.OBJECTID = -1;
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+
     await expect(
       mapUtils.onRaceClickMapHandler(
         view,
@@ -245,6 +236,9 @@ describe("onRaceMapClickHandler()", () => {
     ).resolves.toBeUndefined();
 
     expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith(
+      "Problem with finding matching race"
+    );
     expect(setIsLoading).toBeCalledWith(true);
     expect(setIsLoading).lastCalledWith(false);
   });
@@ -266,56 +260,58 @@ describe("onRaceMapClickHandler()", () => {
     expect(setIsLoading).not.toBeCalled();
   });
 
-  test("goes to a race on map and selects it with callback, not having selected anything before", async () => {
-    const viewGoToGeometrySpy = jest.spyOn(mapUtils, "viewGoToGeometry");
-
-    await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
+  test("goes to a race on map and selects it with callback, not having selected anything before and returns defined", async () => {
+    await expect(
+      mapUtils.onRaceClickMapHandler(
+        view,
+        hitTestResponse,
+        raceRefObj,
+        races,
+        setIsLoading,
+        setClickedRaceObj
+      )
+    ).resolves.toBeDefined();
 
     expect(viewGoToGeometrySpy).toBeCalledWith(view, races[0].geometry);
     expect(setClickedRaceObj).lastCalledWith(races[0]);
   });
 
-  test("goes to a race on map and selects it with callback, having selected some other race before", async () => {
+  test("goes to a race on map and selects it with callback, having selected some other race before and returns defined", async () => {
     raceRefObj.current = {
       oid: races[1].OBJECTID,
       geometry: races[1].geometry,
     };
-    const viewGoToGeometrySpy = jest.spyOn(mapUtils, "viewGoToGeometry");
 
-    await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
+    await expect(
+      mapUtils.onRaceClickMapHandler(
+        view,
+        hitTestResponse,
+        raceRefObj,
+        races,
+        setIsLoading,
+        setClickedRaceObj
+      )
+    ).resolves.toBeDefined();
 
     expect(viewGoToGeometrySpy).toBeCalledWith(view, races[0].geometry);
-    expect(setClickedRaceObj).lastCalledWith(testData1);
+    expect(setClickedRaceObj).lastCalledWith(testRace1);
   });
 
-  test("goes to same race on map and does not select it with callback", async () => {
+  test("goes to same race on map and does not select it with callback and returns undefined", async () => {
     raceRefObj.current = {
       oid: races[0].OBJECTID,
       geometry: races[0].geometry,
     };
-    const viewGoToGeometrySpy = jest.spyOn(mapUtils, "viewGoToGeometry");
-    await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
+    await expect(
+      mapUtils.onRaceClickMapHandler(
+        view,
+        hitTestResponse,
+        raceRefObj,
+        races,
+        setIsLoading,
+        setClickedRaceObj
+      )
+    ).resolves.toBeUndefined();
 
     expect(viewGoToGeometrySpy).toBeCalledWith(
       view,
@@ -326,44 +322,27 @@ describe("onRaceMapClickHandler()", () => {
     expect(setClickedRaceObj).not.toBeCalled();
   });
 
-  test("returns hit objectid and geometry if clicked new or different race", async () => {
-    const clickedRace = await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
-
-    expect(clickedRace).toStrictEqual({
+  test("returns correct hit objectid and geometry if clicked new or different race", async () => {
+    await expect(
+      mapUtils.onRaceClickMapHandler(
+        view,
+        hitTestResponse,
+        raceRefObj,
+        races,
+        setIsLoading,
+        setClickedRaceObj
+      )
+    ).resolves.toStrictEqual({
       oid: races[0].OBJECTID,
       geometry: races[0].geometry,
     });
-  });
-
-  test("returns undefined if clicked same race", async () => {
-    raceRefObj.current = {
-      oid: races[0].OBJECTID,
-      geometry: races[0].geometry,
-    };
-    const clickedRace = await mapUtils.onRaceClickMapHandler(
-      view,
-      hitTestResponse,
-      raceRefObj,
-      races,
-      setIsLoading,
-      setClickedRaceObj
-    );
-
-    expect(clickedRace).toBeUndefined();
   });
 });
 
 describe("viewGoToGeometry()", () => {
   const container = document.createElement("div");
   const { view } = mapUtils.initMapView(container);
-  const raceGeometry = testData1.geometry;
+  const raceGeometry = testRace1.geometry;
   const viewGoToSpy = jest.spyOn(view, "goTo");
   const consoleErrorSpy = jest.spyOn(console, "error");
 
@@ -371,15 +350,17 @@ describe("viewGoToGeometry()", () => {
     jest.clearAllMocks();
   });
 
-  test("shows an error if view.goTo receives wrong target", async () => {
+  test("shows an error if view.goTo throws", async () => {
     viewGoToSpy.mockImplementation(() => {
       throw new Error();
     });
 
-    await mapUtils.viewGoToGeometry(view, raceGeometry);
+    await expect(
+      mapUtils.viewGoToGeometry(view, raceGeometry)
+    ).resolves.toBeUndefined();
 
-    expect(viewGoToSpy).toBeCalled();
-    expect(consoleErrorSpy).toBeCalled();
+    expect(viewGoToSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledTimes(1);
   });
 
   test("sets animation as undefined on view.goTo if animation === false", async () => {
@@ -403,8 +384,8 @@ describe("viewGoToGeometry()", () => {
       zoom: GO_TO_RACE_ZOOM,
     };
     const goToOptions = {
-      duration: GO_TO_RACE_ANIMATION_DURATION,
-      easing: GO_TO_RACE_ANIMATION_EASING,
+      duration: GO_TO_ANIMATION_DURATION,
+      easing: GO_TO_ANIMATION_EASING,
     };
 
     await mapUtils.viewGoToGeometry(view, raceGeometry);

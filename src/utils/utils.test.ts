@@ -3,10 +3,13 @@ import {
   timestampFormatter,
   lapRecordInfoFormatter,
   getNextRace,
+  toggleUIZoom,
 } from "./utils";
-import { testData1, testData2, testData3 } from "../testData";
+import { testRace1, testRace2, testRace3 } from "../testRacesData";
 
-jest.spyOn(console, "error").mockImplementation((message) => message);
+const consoleErrorSpy = jest
+  .spyOn(console, "error")
+  .mockImplementation(() => {});
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -20,15 +23,15 @@ describe("lapRecordFormatter()", () => {
     "returns '0' if lap null or < 0 or >= 3600 sec and shows console error",
     (arg: lapRecordInSeconds) => {
       const argFormatted = lapRecordFormatter(arg);
-      expect(console.error).toBeCalledTimes(1);
-      expect(console.error).toBeCalledWith("Invalid Lap Record");
+      expect(consoleErrorSpy).toBeCalledTimes(1);
+      expect(consoleErrorSpy).toBeCalledWith("Invalid Lap Record");
       expect(argFormatted).toBe("0");
     }
   );
 
   test("returns '0' if lap is 0 and does not show console error", () => {
     const lapRecordZero = lapRecordFormatter(0);
-    expect(console.error).not.toBeCalled();
+    expect(consoleErrorSpy).not.toBeCalled();
     expect(lapRecordZero).toBe("0");
   });
 
@@ -43,7 +46,7 @@ describe("lapRecordFormatter()", () => {
       const regex = /^\d{1,2}:\d{2}\.\d{3}$/;
       const argFormatted = lapRecordFormatter(arg);
       expect(argFormatted).toMatch(regex);
-      expect(console.error).not.toBeCalled();
+      expect(consoleErrorSpy).not.toBeCalled();
     }
   );
 
@@ -57,7 +60,7 @@ describe("lapRecordFormatter()", () => {
       const regex = /^\d{2}\.\d{3}$/;
       const argFormatted = lapRecordFormatter(arg);
       expect(argFormatted).toMatch(regex);
-      expect(console.error).not.toBeCalled();
+      expect(consoleErrorSpy).not.toBeCalled();
     }
   );
 });
@@ -75,8 +78,8 @@ describe("timestampFormatter()", () => {
 
   test("returns 'Invalid Date' and shows console.error if given invalid timestamp", () => {
     const argFormatted = timestampFormatter(9999999999999999);
-    expect(console.error).toBeCalledTimes(1);
-    expect(console.error).toBeCalledWith("Invalid Date");
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Invalid Date");
     expect(argFormatted).toBe("Invalid Date");
   });
 });
@@ -91,11 +94,14 @@ describe("lapRecordInfoFormatter()", () => {
 });
 
 describe("getNextRace()", () => {
-  const racesArr = [testData1, testData2, testData3];
-  const RealDate = global.Date;
+  const racesArr = [testRace1, testRace2, testRace3];
+
+  const createNewDateMock = (mockDate: any) =>
+    jest.spyOn(global, "Date").mockImplementation(() => mockDate);
 
   afterEach(() => {
-    global.Date = RealDate;
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   test("returns undefined if there is no next race/last race already passed", () => {
@@ -110,26 +116,51 @@ describe("getNextRace()", () => {
     expect(nextRace).toBeUndefined();
   });
 
-  test("returns next race in calendar - last - (testData3)", () => {
+  test("returns next race in calendar - last - (testRace3)", () => {
     const mockDate = new Date(1700002800000);
+    createNewDateMock(mockDate);
 
-    jest.spyOn(global, "Date").mockImplementation((): any => mockDate);
     const nextRace = getNextRace(racesArr);
-    expect(nextRace).toStrictEqual(testData3);
+    expect(nextRace).toStrictEqual(testRace3);
   });
-  test("returns next race in calendar - middle - (testData2)", () => {
+  test("returns next race in calendar - middle - (testRace2)", () => {
     const mockDate = new Date(1688076000000);
+    createNewDateMock(mockDate);
 
-    jest.spyOn(global, "Date").mockImplementation((): any => mockDate);
     const nextRace = getNextRace(racesArr);
-    expect(nextRace).toStrictEqual(testData2);
+    expect(nextRace).toStrictEqual(testRace2);
   });
 
-  test("returns next race in calendar - first - (testData1)", () => {
+  test("returns next race in calendar - first - (testRace1)", () => {
     const mockDate = new Date(1685397600000);
+    createNewDateMock(mockDate);
 
-    jest.spyOn(global, "Date").mockImplementation((): any => mockDate);
     const nextRace = getNextRace(racesArr);
-    expect(nextRace).toStrictEqual(testData1);
+    expect(nextRace).toStrictEqual(testRace1);
+  });
+
+  describe("toggleUIZoom()", () => {
+    test("removes 'zoom' from view.ui.components array", () => {
+      const cmps = ["1", "2", "3", "zoom", "4", "5", "6"];
+      const cmpsWithoutZoom = ["1", "2", "3", "4", "5", "6"];
+      const view: any = {
+        ui: {
+          components: cmps,
+        },
+      };
+      toggleUIZoom(view);
+      expect(view.ui.components).toStrictEqual(cmpsWithoutZoom);
+    });
+
+    test("adds zoom if there wasnt one", () => {
+      const cmps = ["1", "2", "3", "4", "5", "6"];
+      const view: any = {
+        ui: {
+          components: [...cmps],
+        },
+      };
+      toggleUIZoom(view);
+      expect(view.ui.components.includes("zoom")).toBe(true);
+    });
   });
 });

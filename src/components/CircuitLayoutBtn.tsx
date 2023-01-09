@@ -1,10 +1,11 @@
 import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { useMapViewContext } from "../context/MapViewContext";
-import { CircuitObj, RaceObj } from "../race-types";
+import { RaceObj, CircuitObj } from "../race-types";
 import { viewGoToGeometry } from "../utils/map-utils";
 import { createCircuitPolyline } from "../utils/graphic-utils";
+import { toggleUIZoom, toggleLayerVisible } from "../utils/utils";
 import { fetchRelatedCircuit } from "../utils/server-utils";
-import { removeZoomFromUI } from "../utils/utils";
+import { GO_TO_CIRCUIT_ZOOM } from "../config";
 
 type CircuitLayoutBtnProps = {
   isLoading: boolean;
@@ -40,9 +41,14 @@ function CircuitLayoutBtn({
         if (!circuitObj) throw new Error("Could not find related circuit");
         const circuitPolyline = createCircuitPolyline(circuitObj.geometry);
 
-        removeZoomFromUI(view);
-        await viewGoToGeometry(view, circuitObj.geometry, true, 14);
-        layer.visible = false;
+        toggleUIZoom(view);
+        await viewGoToGeometry(
+          view,
+          circuitObj.geometry,
+          true,
+          GO_TO_CIRCUIT_ZOOM
+        );
+        toggleLayerVisible(layer);
         view.graphics.add(circuitPolyline);
 
         setCircuitGraphic(circuitPolyline);
@@ -50,8 +56,8 @@ function CircuitLayoutBtn({
       } else {
         view.graphics.remove(circuitGraphic);
         await viewGoToGeometry(mapView.view, clickedRaceObj.geometry);
-        layer.visible = true;
-        view.ui.components = [...view.ui.components, "zoom"];
+        toggleLayerVisible(layer);
+        toggleUIZoom(view);
 
         setCircuitGraphic(undefined);
         isCircuitGraphicVisibleHandler(false);
@@ -83,7 +89,7 @@ function CircuitLayoutBtn({
       <button
         disabled={isBtnDisabled}
         onClick={onCircuitLayoutBtnClickHandler}
-        className="bg-btnFadedRed h-14 text-center text-3xl w-5/6 text-textFadedWhite font-bold mt-8"
+        className="bg-btnFadedRed h-14 text-center text-3xl w-5/6 text-textFadedWhite font-bold mt-4"
         style={{
           backgroundColor: isBtnDisabled ? "" : "red",
           color: isBtnDisabled ? "" : "white",

@@ -5,8 +5,8 @@ import { RefObject, Dispatch, SetStateAction } from "react";
 import {
   BASEMAP_ID,
   FEATURELAYER_URL,
-  GO_TO_RACE_ANIMATION_DURATION,
-  GO_TO_RACE_ANIMATION_EASING,
+  GO_TO_ANIMATION_DURATION,
+  GO_TO_ANIMATION_EASING,
   GO_TO_RACE_ZOOM,
   MAX_SCALE,
   MIN_SCALE,
@@ -92,8 +92,8 @@ export const viewGoToGeometry: viewGoToGeometryFnType = async (
       goToTarget.zoom = zoom === true ? GO_TO_RACE_ZOOM : zoom;
     }
     const goToOptions = {
-      duration: GO_TO_RACE_ANIMATION_DURATION,
-      easing: GO_TO_RACE_ANIMATION_EASING,
+      duration: GO_TO_ANIMATION_DURATION,
+      easing: GO_TO_ANIMATION_EASING,
     };
 
     return await view.goTo(goToTarget, animation ? goToOptions : undefined);

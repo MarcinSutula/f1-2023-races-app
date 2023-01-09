@@ -64,10 +64,7 @@ export const fetchRelatedCircuit = async (
     const isResponseValid = await circuitSchema.isValid(circuitResponse, {
       stripUnknown: false,
     });
-
-    if (!isResponseValid) {
-      throw new Error("Wrong server response (circuit)");
-    }
+    if (!isResponseValid) throw new Error("Wrong server response (circuit)");
 
     return circuitResponse;
   } catch (err) {

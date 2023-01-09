@@ -1,14 +1,15 @@
-import { testData1 } from "../testData";
-import { fetchAllRaces } from "./server-utils";
+import { testRace1 } from "../testRacesData";
+import { fetchAllRaces, fetchRelatedCircuit } from "./server-utils";
 import { BaseSchema } from "yup";
+import { testCircuit1 } from "../testCircuitData";
 
-jest
+const yupIsValidSpy = jest
   .spyOn(BaseSchema.prototype, "isValid")
-  .mockImplementation((racesResponse: object[]): Promise<boolean> => {
+  .mockImplementation((res: any): Promise<boolean> => {
     if (
-      !racesResponse ||
-      racesResponse.length < 1 ||
-      racesResponse[0].hasOwnProperty("randomAtr")
+      !res ||
+      res[0]?.hasOwnProperty("randomAttr") ||
+      res?.attributes?.hasOwnProperty("randomAttr")
     ) {
       return Promise.resolve(false);
     }
@@ -16,7 +17,9 @@ jest
     return Promise.resolve(true);
   });
 
-jest.spyOn(console, "error").mockImplementation(() => {});
+const consoleErrorSpy = jest
+  .spyOn(console, "error")
+  .mockImplementation(() => {});
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -29,17 +32,17 @@ describe("fetchAllRaces()", () => {
         return {
           features: [
             {
-              attributes: { ...testData1 },
-              geometry: testData1.geometry,
+              attributes: { ...testRace1 },
+              geometry: testRace1.geometry,
             },
           ],
         };
       },
     };
 
-    expect(await fetchAllRaces(layer as any)).toStrictEqual([testData1]);
-    expect(BaseSchema.prototype.isValid).toBeCalledTimes(1);
-    expect(console.error).not.toBeCalled();
+    expect(await fetchAllRaces(layer as any)).toStrictEqual([testRace1]);
+    expect(yupIsValidSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).not.toBeCalled();
   });
 
   test("catches and shows correct console error if server request and so the response were incorrect", async () => {
@@ -50,9 +53,9 @@ describe("fetchAllRaces()", () => {
     };
 
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
-    expect(console.error).toBeCalledTimes(1);
-    expect(console.error).toBeCalledWith("Problem with fetching all races");
-    expect(BaseSchema.prototype.isValid).not.toBeCalled();
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Problem with fetching all races");
+    expect(yupIsValidSpy).not.toBeCalled();
   });
 
   test("catches and shows correct console error if server response attributes were incorrect", async () => {
@@ -61,16 +64,86 @@ describe("fetchAllRaces()", () => {
         return {
           features: [
             {
-              attributes: { randomAtr: "monument", randomAtr2: 2 },
-              geometry: { randomAtr3: 15, randomAtr4: -20 },
+              attributes: { randomAttr: "monument", randomAttr2: 2 },
+              geometry: { randomAttr3: 15, randomAttr4: -20 },
             },
           ],
         };
       },
     };
     expect(await fetchAllRaces(layer as any)).toBeUndefined();
-    expect(console.error).toBeCalledTimes(1);
-    expect(console.error).toBeCalledWith("Wrong server response (races)");
-    expect(BaseSchema.prototype.isValid).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Wrong server response (races)");
+    expect(yupIsValidSpy).toBeCalledTimes(1);
+  });
+});
+
+describe("fetchRelatedCircuit()", () => {
+  test("returns circuit response if server response was correct", async () => {
+    const layer = {
+      relationships: [{ name: "F1_2023_tracks", id: 0 }],
+      queryRelatedFeatures: () => {
+        return {
+          "1": {
+            features: [testCircuit1],
+          },
+        };
+      },
+    };
+    expect(await fetchRelatedCircuit(layer as any, 1)).toStrictEqual(
+      testCircuit1
+    );
+    expect(yupIsValidSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).not.toBeCalled();
+  });
+
+  test("catches and shows correct console error if server request and so the response were incorrect", async () => {
+    const layer = {
+      relationships: [{ name: "F1_2023_tracks", id: 0 }],
+      queryRelatedFeatures: () => {
+        return {};
+      },
+    };
+
+    expect(await fetchRelatedCircuit(layer as any, 1)).toBeUndefined();
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith(
+      "Problem with fetching related circuit"
+    );
+    expect(yupIsValidSpy).not.toBeCalled();
+  });
+
+  test("catches and shows correct console error if server response does not pass yup validation", async () => {
+    const layer = {
+      relationships: [{ name: "F1_2023_tracks", id: 0 }],
+      queryRelatedFeatures: () => {
+        return {
+          "1": {
+            features: [
+              {
+                attributes: { randomAttr: "monument", randomAttr2: 2 },
+                geometry: { randomAttr3: 15, randomAttr4: -20 },
+              },
+            ],
+          },
+        };
+      },
+    };
+    expect(await fetchRelatedCircuit(layer as any, 1)).toBeUndefined();
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith("Wrong server response (circuit)");
+    expect(yupIsValidSpy).toBeCalledTimes(1);
+  });
+
+  test("catch and shows correct console error if could not find related layer", async () => {
+    const layer = {
+      relationships: [{ name: "random", id: 0 }],
+    };
+
+    expect(await fetchRelatedCircuit(layer as any, 1)).toBeUndefined();
+    expect(consoleErrorSpy).toBeCalledTimes(1);
+    expect(consoleErrorSpy).toBeCalledWith(
+      "Problem with finding related layer"
+    );
   });
 });

@@ -1,4 +1,4 @@
-import { testData1, testData2 } from "../testData";
+import { testRace1, testRace2 } from "../testRacesData";
 import * as utils from "./utils";
 import {
   changeRacesSymbology,
@@ -11,7 +11,7 @@ describe("changeRacesSymbology()", () => {
       renderer: {},
     } as any;
 
-    changeRacesSymbology(layer, testData1);
+    changeRacesSymbology(layer, testRace1);
     expect(layer.renderer.visualVariables).toBeDefined();
     expect(layer.renderer.visualVariables.length).toBe(2);
   });
@@ -21,7 +21,7 @@ describe("createPolylineBetweenRaces()", () => {
   const getGeometrySpy = jest.spyOn(utils, "getGeometry");
 
   test("creates a polyline between given two race objects", () => {
-    const polyline = createPolylineBetweenRaces(testData1, testData2);
+    const polyline = createPolylineBetweenRaces(testRace1, testRace2);
     expect(getGeometrySpy).toBeCalledTimes(2);
     expect(getGeometrySpy).toBeCalledWith(expect.anything(), "lng,lat");
     expect(polyline.geometry).toBeDefined();
