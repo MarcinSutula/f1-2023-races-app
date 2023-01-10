@@ -9,8 +9,6 @@ Worked on mainly to practice:
 - Storybook
 - useContext
 
-Demo:x
-
 NOT ADAPTED TO MOBILE DEVICES
 
 Credit to https://github.com/bacinger for sharing circuits geojsons.
