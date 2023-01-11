@@ -14,17 +14,13 @@ import {
 const goToMock = jest.fn();
 
 jest.mock("@arcgis/core/views/MapView", () =>
-  jest.fn().mockImplementation(() => {
-    return { goTo: goToMock };
-  })
+  jest.fn().mockImplementation(() => ({ goTo: goToMock }))
 );
 jest.mock("@arcgis/core/WebMap");
 jest.mock("@arcgis/core/layers/FeatureLayer", () =>
-  jest.fn().mockImplementation(() => {
-    return {
-      properties: jest.fn(),
-    };
-  })
+  jest.fn().mockImplementation(() => ({
+    properties: jest.fn(),
+  }))
 );
 
 describe("initMapView()", () => {

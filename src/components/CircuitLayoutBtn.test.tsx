@@ -24,23 +24,22 @@ describe("CircuitLayoutBtn", () => {
     .spyOn(utils, "eventLocker")
     .mockImplementation(() => {});
 
-  const useMapViewContextMock: any = (_: any) => {
-    return {
-      view: {
-        graphics: {
-          remove: viewGraphicRemoveMock,
-          add: viewGraphicAddMock,
-        },
-        ui: {
-          components: ["attributes", "zoom"],
-        },
-        on: viewOnMock,
+  const useMapViewContextMock: any = (_: any) => ({
+    view: {
+      graphics: {
+        remove: viewGraphicRemoveMock,
+        add: viewGraphicAddMock,
       },
-      layer: {
-        visible: true,
+      ui: {
+        components: ["attributes", "zoom"],
       },
-    };
-  };
+      on: viewOnMock,
+    },
+    layer: {
+      visible: true,
+    },
+  });
+
   const fakePolyline = "fakePolyline";
 
   jest

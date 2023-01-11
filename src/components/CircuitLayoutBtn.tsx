@@ -77,7 +77,6 @@ function CircuitLayoutBtn({
     if (!mapView || !mapView.view) return;
     const vieweventLocker = mapView.view.on(
       ["click", "drag", "double-click", "mouse-wheel", "hold"] as any,
-      // (event: __esri.ViewClickEvent) => eventLocker(!!circuitGraphic, event)
       eventLocker.bind("", !!circuitGraphic)
     );
     return () => vieweventLocker.remove();
