@@ -11,4 +11,6 @@ Worked on mainly to practice:
 
 NOT ADAPTED TO MOBILE DEVICES
 
+Demo: https://f1-2023-races-app.vercel.app/
+
 Credit to https://github.com/bacinger for sharing circuits geojsons.
