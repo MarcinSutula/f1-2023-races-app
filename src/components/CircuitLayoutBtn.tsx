@@ -3,7 +3,7 @@ import { useMapViewContext } from "../context/MapViewContext";
 import { RaceObj, CircuitObj } from "../race-types";
 import { viewGoToGeometry } from "../utils/map-utils";
 import { createCircuitPolyline } from "../utils/graphic-utils";
-import { toggleUIZoom, toggleLayerVisible } from "../utils/utils";
+import { toggleUIZoom, toggleLayerVisible, eventLocker } from "../utils/utils";
 import { fetchRelatedCircuit } from "../utils/server-utils";
 import { GO_TO_CIRCUIT_ZOOM } from "../config";
 
@@ -75,13 +75,12 @@ function CircuitLayoutBtn({
 
   useEffect(() => {
     if (!mapView || !mapView.view) return;
-    const viewNavLockHandler = mapView.view.on(
+    const vieweventLocker = mapView.view.on(
       ["click", "drag", "double-click", "mouse-wheel", "hold"] as any,
-      function (event: __esri.ViewClickEvent) {
-        circuitGraphic && event.stopPropagation();
-      }
+      // (event: __esri.ViewClickEvent) => eventLocker(!!circuitGraphic, event)
+      eventLocker.bind("", !!circuitGraphic)
     );
-    return () => viewNavLockHandler.remove();
+    return () => vieweventLocker.remove();
   });
 
   return (

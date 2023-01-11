@@ -93,6 +93,13 @@ export const toggleUIZoom = (view: __esri.MapView): void => {
   }
 };
 
-export const toggleLayerVisible = (layer: __esri.FeatureLayer) => {
+export const toggleLayerVisible = (layer: __esri.FeatureLayer): void => {
   layer.visible = !layer.visible;
+};
+
+export const eventLocker = (
+  shouldLock: boolean,
+  event: __esri.ViewClickEvent
+): void => {
+  shouldLock && event.stopPropagation();
 };

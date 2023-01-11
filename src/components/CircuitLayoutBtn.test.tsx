@@ -15,10 +15,15 @@ describe("CircuitLayoutBtn", () => {
   const viewGraphicAddMock = jest.fn();
   const viewGraphicRemoveMock = jest.fn();
   const isCircuitGraphicVisibleMock = jest.fn();
-  //   const viewOnCallback =
-  //   const viewOnMock = jest.fn().mockImplementation((arr, callback)=>{
-  //     return 'cos'
-  //   })
+  const viewOnRemoveMock = jest.fn();
+  const viewOnMock = jest.fn().mockImplementation((_: any, callback: any) => {
+    callback();
+    return { remove: viewOnRemoveMock };
+  });
+  const eventLockerSpy = jest
+    .spyOn(utils, "eventLocker")
+    .mockImplementation(() => {});
+
   const useMapViewContextMock: any = (_: any) => {
     return {
       view: {
@@ -29,11 +34,7 @@ describe("CircuitLayoutBtn", () => {
         ui: {
           components: ["attributes", "zoom"],
         },
-        on: () => {
-          return {
-            remove: jest.fn(),
-          };
-        },
+        on: viewOnMock,
       },
       layer: {
         visible: true,
@@ -45,14 +46,15 @@ describe("CircuitLayoutBtn", () => {
   jest
     .spyOn(mapViewCtxFile, "useMapViewContext")
     .mockImplementation(useMapViewContextMock);
-  const fetchRelatedCircuitMock: any = () => Promise.resolve(testCircuit1);
-  const fetchSpy = jest
+  const fetchRelatedCircuitReturnMock: any = () =>
+    Promise.resolve(testCircuit1);
+  const fetchRelatedCircuitSpy = jest
     .spyOn(serverUtils, "fetchRelatedCircuit")
-    .mockImplementation(fetchRelatedCircuitMock);
+    .mockImplementation(fetchRelatedCircuitReturnMock);
   const viewGoToGeometrySpy = jest
     .spyOn(mapUtils, "viewGoToGeometry")
     .mockImplementation(jest.fn());
-  const polylineSpy = jest
+  const createCircuitPolylineSpy = jest
     .spyOn(graphicUtils, "createCircuitPolyline")
     .mockImplementation((): any => fakePolyline);
   const consoleErrorSpy = jest
@@ -154,8 +156,8 @@ describe("CircuitLayoutBtn", () => {
     expect(setIsLoadingMock).toBeCalledWith(true);
     expect(setIsLoadingMock).lastCalledWith(false);
     //
-    expect(fetchSpy).toBeCalledTimes(1);
-    expect(polylineSpy).toBeCalledTimes(1);
+    expect(fetchRelatedCircuitSpy).toBeCalledTimes(1);
+    expect(createCircuitPolylineSpy).toBeCalledTimes(1);
     expect(viewGoToGeometrySpy).toBeCalledTimes(1);
     expect(setIsLoadingMock).toBeCalledTimes(2);
   });
@@ -179,17 +181,14 @@ describe("CircuitLayoutBtn", () => {
     await waitFor(() => expect(setIsLoadingMock).toBeCalledTimes(2));
     expect(setIsLoadingMock).toBeCalledWith(true);
     expect(setIsLoadingMock).lastCalledWith(false);
-    //
-    // expect(fetchSpy).toBeCalledTimes(1);
-    // expect(polylineSpy).toBeCalledTimes(1);
-    // expect(viewGoToGeometrySpy).toBeCalledTimes(1);
-    // expect(setIsLoadingMock).toBeCalledTimes(2);
   });
 
-  test("without circuitGraphic: catches error Could not find related circuit if no circuitObj was found from fetchRelatedCircuit", async () => {
-    const useStateMock: any = (_: any) => [false, jest.fn()];
+  test("calls setIsLoading two times with true and false if error is thrown", async () => {
+    const useStateMock: any = (_: any) => [true, jest.fn()];
     jest.spyOn(React, "useState").mockImplementation(useStateMock);
-    fetchSpy.mockImplementationOnce(() => Promise.resolve(undefined));
+    fetchRelatedCircuitSpy.mockImplementationOnce(() => {
+      throw new Error();
+    });
 
     render(
       <CircuitLayoutBtn
@@ -203,7 +202,32 @@ describe("CircuitLayoutBtn", () => {
 
     const btn = screen.getByRole("button");
     fireEvent.click(btn);
-    await waitFor(() => expect(fetchSpy).toBeCalledTimes(1));
+    await waitFor(() => expect(fetchRelatedCircuitSpy).toThrow());
+    expect(setIsLoadingMock).toBeCalledTimes(2);
+    expect(setIsLoadingMock).toBeCalledWith(true);
+    expect(setIsLoadingMock).lastCalledWith(false);
+  });
+
+  test("without circuitGraphic: catches error Could not find related circuit if no circuitObj was found from fetchRelatedCircuit", async () => {
+    const useStateMock: any = (_: any) => [false, jest.fn()];
+    jest.spyOn(React, "useState").mockImplementation(useStateMock);
+    fetchRelatedCircuitSpy.mockImplementationOnce(() =>
+      Promise.resolve(undefined)
+    );
+
+    render(
+      <CircuitLayoutBtn
+        setIsLoading={setIsLoadingMock}
+        isLoading={false}
+        clickedRaceObj={testRace1}
+        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleMock}
+        isMapInAnimation={false}
+      />
+    );
+
+    const btn = screen.getByRole("button");
+    fireEvent.click(btn);
+    await waitFor(() => expect(fetchRelatedCircuitSpy).toBeCalledTimes(1));
     expect(consoleErrorSpy).toBeCalledWith("Could not find related circuit");
     expect(consoleErrorSpy).toBeCalledTimes(1);
   });
@@ -224,7 +248,7 @@ describe("CircuitLayoutBtn", () => {
 
     const btn = screen.getByRole("button");
     fireEvent.click(btn);
-    await waitFor(() => expect(fetchSpy).toBeCalledTimes(1));
+    await waitFor(() => expect(fetchRelatedCircuitSpy).toBeCalledTimes(1));
     expect(consoleErrorSpy).not.toBeCalled();
   });
 
@@ -314,6 +338,24 @@ describe("CircuitLayoutBtn", () => {
     await waitFor(() => expect(toggleLayerVisibleSpy).toBeCalledTimes(1));
   });
 
+  test("without circuitGraphic: does not call view.graphic.remove", async () => {
+    const useStateMock: any = (_: any) => [false, jest.fn()];
+    jest.spyOn(React, "useState").mockImplementation(useStateMock);
+
+    render(
+      <CircuitLayoutBtn
+        setIsLoading={setIsLoadingMock}
+        isLoading={false}
+        clickedRaceObj={testRace1}
+        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleMock}
+        isMapInAnimation={false}
+      />
+    );
+    const btn = screen.getByRole("button");
+    fireEvent.click(btn);
+    await waitFor(() => expect(viewGraphicRemoveMock).not.toBeCalled());
+  });
+
   test("with circuitGraphic: remove polyline from map, set useState undefined, calls isCircuitGraphicVisibleHandler with false", async () => {
     const setStateMock = jest.fn();
     const stateMock = true;
@@ -399,7 +441,7 @@ describe("CircuitLayoutBtn", () => {
     );
   });
 
-  test("with circuitGraphic: useEffect - locks map navigation", () => {
+  test("with circuitGraphic: does not fetch related circuits, does not create polyline, does call view.graphics.add", async () => {
     const useStateMock: any = (_: any) => [true, jest.fn()];
     jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
@@ -412,5 +454,48 @@ describe("CircuitLayoutBtn", () => {
         isMapInAnimation={false}
       />
     );
+    const btn = screen.getByRole("button");
+    fireEvent.click(btn);
+    await waitFor(() => expect(viewGraphicAddMock).not.toBeCalled());
+    expect(createCircuitPolylineSpy).not.toBeCalled();
+    expect(fetchRelatedCircuitSpy).not.toBeCalled();
+  });
+
+  test("useEffect - calls view.on.remove (as cleanup) on unmount", async () => {
+    const useStateMock: any = (_: any) => [true, jest.fn()];
+    jest.spyOn(React, "useState").mockImplementation(useStateMock);
+
+    const { unmount } = render(
+      <CircuitLayoutBtn
+        setIsLoading={setIsLoadingMock}
+        isLoading={false}
+        clickedRaceObj={testRace1}
+        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleMock}
+        isMapInAnimation={false}
+      />
+    );
+
+    unmount();
+
+    await waitFor(() => expect(viewOnRemoveMock).toBeCalledTimes(1));
+  });
+
+  test("useEffect - calls view.on on mount with array of forbidden events and viewOnCallback", async () => {
+    const eventsArr = ["click", "drag", "double-click", "mouse-wheel", "hold"];
+    const useStateMock: any = (_: any) => [true, jest.fn()];
+    jest.spyOn(React, "useState").mockImplementation(useStateMock);
+
+    render(
+      <CircuitLayoutBtn
+        setIsLoading={setIsLoadingMock}
+        isLoading={false}
+        clickedRaceObj={testRace1}
+        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleMock}
+        isMapInAnimation={false}
+      />
+    );
+    await waitFor(() => expect(eventLockerSpy).toBeCalledTimes(1));
+    expect(viewOnMock).toBeCalledTimes(1);
+    expect(viewOnMock).toBeCalledWith(eventsArr, expect.anything());
   });
 });

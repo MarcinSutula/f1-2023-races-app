@@ -4,6 +4,7 @@ import {
   lapRecordInfoFormatter,
   getNextRace,
   toggleUIZoom,
+  eventLocker,
 } from "./utils";
 import { testRace1, testRace2, testRace3 } from "../testRacesData";
 
@@ -161,6 +162,23 @@ describe("getNextRace()", () => {
       };
       toggleUIZoom(view);
       expect(view.ui.components.includes("zoom")).toBe(true);
+    });
+  });
+
+  describe("eventLocker()", () => {
+    const stopPropagationMock = jest.fn();
+    const event: any = { stopPropagation: stopPropagationMock };
+
+    test("locks event if shouldLock is true", () => {
+      const shouldLock = true;
+      eventLocker(shouldLock, event);
+      expect(stopPropagationMock).toBeCalledTimes(1);
+    });
+
+    test("does nothing if shouldLock is false", () => {
+      const shouldLock = false;
+      eventLocker(shouldLock, event);
+      expect(stopPropagationMock).not.toBeCalled();
     });
   });
 });
