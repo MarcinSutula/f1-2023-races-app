@@ -9,7 +9,7 @@ import * as mapUtils from "../utils/map-utils";
 import * as graphicUtils from "../utils/graphic-utils";
 import * as utils from "../utils/utils";
 import { testCircuit1 } from "../testCircuitData";
-import { GO_TO_CIRCUIT_ZOOM } from "../config";
+import { GO_TO_CIRCUIT_ZOOM, NAVIGATION_LOCK_EVENTS } from "../config";
 
 describe("CircuitLayoutBtn", () => {
   const viewGraphicAddMock = jest.fn();
@@ -480,7 +480,6 @@ describe("CircuitLayoutBtn", () => {
   });
 
   test("useEffect - calls view.on on mount with array of forbidden events and viewOnCallback", async () => {
-    const eventsArr = ["click", "drag", "double-click", "mouse-wheel", "hold"];
     const useStateMock: any = (_: any) => [true, jest.fn()];
     jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
@@ -495,6 +494,9 @@ describe("CircuitLayoutBtn", () => {
     );
     await waitFor(() => expect(eventLockerSpy).toBeCalledTimes(1));
     expect(viewOnMock).toBeCalledTimes(1);
-    expect(viewOnMock).toBeCalledWith(eventsArr, expect.anything());
+    expect(viewOnMock).toBeCalledWith(
+      NAVIGATION_LOCK_EVENTS,
+      expect.anything()
+    );
   });
 });

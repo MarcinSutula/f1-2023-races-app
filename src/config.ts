@@ -18,3 +18,13 @@ export const RACES_NUM: number = 24;
 //Races symbology
 export const NEXT_RACE_SIZE: string = "46px";
 export const DEFAULT_RACE_SIZE: string = "26px";
+
+//Navigation lock events
+export const NAVIGATION_LOCK_EVENTS: string[] = [
+  "click",
+  "drag",
+  "double-click",
+  "mouse-wheel",
+  "hold",
+  "key-down",
+];

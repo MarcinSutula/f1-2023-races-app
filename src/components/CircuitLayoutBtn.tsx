@@ -5,7 +5,7 @@ import { viewGoToGeometry } from "../utils/map-utils";
 import { createCircuitPolyline } from "../utils/graphic-utils";
 import { toggleUIZoom, toggleLayerVisible, eventLocker } from "../utils/utils";
 import { fetchRelatedCircuit } from "../utils/server-utils";
-import { GO_TO_CIRCUIT_ZOOM } from "../config";
+import { GO_TO_CIRCUIT_ZOOM, NAVIGATION_LOCK_EVENTS } from "../config";
 
 type CircuitLayoutBtnProps = {
   isLoading: boolean;
@@ -76,14 +76,7 @@ function CircuitLayoutBtn({
   useEffect(() => {
     if (!mapView || !mapView.view) return;
     const vieweventLocker = mapView.view.on(
-      [
-        "click",
-        "drag",
-        "double-click",
-        "mouse-wheel",
-        "hold",
-        "key-down",
-      ] as any,
+      NAVIGATION_LOCK_EVENTS as any,
       eventLocker.bind("", !!circuitGraphic)
     );
     return () => vieweventLocker.remove();
