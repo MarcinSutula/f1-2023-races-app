@@ -76,7 +76,14 @@ function CircuitLayoutBtn({
   useEffect(() => {
     if (!mapView || !mapView.view) return;
     const vieweventLocker = mapView.view.on(
-      ["click", "drag", "double-click", "mouse-wheel", "hold"] as any,
+      [
+        "click",
+        "drag",
+        "double-click",
+        "mouse-wheel",
+        "hold",
+        "key-down",
+      ] as any,
       eventLocker.bind("", !!circuitGraphic)
     );
     return () => vieweventLocker.remove();
