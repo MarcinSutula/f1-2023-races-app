@@ -27,42 +27,20 @@ function App() {
   const onMapClickHandler = (view: __esri.MapView, races: RaceObj[]): void => {
     view.on("click", async (event) => {
       if (isLoading) return;
-      const hitTestResponse: __esri.HitTestResult = await view.hitTest(event);
-
-      if (hitTestResponse.results.length > 1) {
-        const hitData = await onRaceClickMapHandler(
-          view,
-          hitTestResponse,
-          selectedRaceRef,
-          races,
-          setIsLoading,
-          setClickedRaceObj
-        );
-        hitData && updateSelectedRace(hitData);
-      }
-    });
-  };
-
-  useEffect(() => {
-    (async () => {
       try {
-        if (!mapViewCtx || !racesArrCtx) return;
-        const { view } = mapViewCtx;
-        setIsLoading(true);
-        const nextRace = getNextRace(racesArrCtx);
-        nextRace && changeRacesSymbology(mapViewCtx.layer, nextRace);
+        const hitTestResponse: __esri.HitTestResult = await view.hitTest(event);
 
-        view.when(() =>
-          onViewInstanceCreated(
+        if (hitTestResponse.results.length > 1) {
+          const hitData = await onRaceClickMapHandler(
             view,
-            racesArrCtx,
-            nextRace,
-            setClickedRaceObj,
+            hitTestResponse,
+            selectedRaceRef,
+            races,
             setIsLoading,
-            updateSelectedRace,
-            () => onMapClickHandler(view, racesArrCtx)
-          )
-        );
+            setClickedRaceObj
+          );
+          hitData && updateSelectedRace(hitData);
+        }
       } catch (err) {
         setIsLoading(false);
         if (err instanceof Error) {
@@ -71,7 +49,28 @@ function App() {
         }
         console.error("Unexpected error", err);
       }
-    })();
+    });
+  };
+
+  useEffect(() => {
+    if (!mapViewCtx || !racesArrCtx) return;
+    const { view } = mapViewCtx;
+    setIsLoading(true);
+    const nextRace = getNextRace(racesArrCtx);
+    nextRace && changeRacesSymbology(mapViewCtx.layer, nextRace);
+
+    view.when(
+      async () =>
+        await onViewInstanceCreated(
+          view,
+          racesArrCtx,
+          nextRace,
+          setClickedRaceObj,
+          setIsLoading,
+          updateSelectedRace,
+          () => onMapClickHandler(view, racesArrCtx)
+        )
+    );
 
     return () => mapViewCtx?.view.destroy();
   }, [racesArrCtx]);
