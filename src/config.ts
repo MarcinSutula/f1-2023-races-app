@@ -13,7 +13,7 @@ export const GO_TO_ANIMATION_EASING: __esri.GoToOptions2D["easing"] =
 export const GO_TO_CIRCUIT_ZOOM: number = 14;
 
 //Server
-export const RACES_NUM: number = 24;
+export const RACES_NUM: number = 23;
 
 //Races symbology
 export const NEXT_RACE_SIZE: string = "46px";
