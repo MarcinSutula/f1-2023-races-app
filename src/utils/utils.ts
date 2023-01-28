@@ -15,6 +15,7 @@ export const lapRecordFormatter = (
   let [secondsStr, miliSecondsStr] = lapRecordStr.split(".");
   let minutes = 0;
 
+  // Ugly code becase you did not cast it as a number earlier.
   if (+secondsStr >= 60) {
     minutes = Math.floor(+secondsStr / 60);
     secondsStr = (+secondsStr - minutes * 60).toString();

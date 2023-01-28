@@ -11,6 +11,8 @@ import * as utils from "../utils/utils";
 import { testCircuit1 } from "../testCircuitData";
 import { GO_TO_CIRCUIT_ZOOM, NAVIGATION_LOCK_EVENTS } from "../config";
 
+// There are way too many tests. While this might be okay, it suggests to me that the component under test does too much
+// and it should be split
 describe("CircuitLayoutBtn", () => {
   const viewGraphicAddMock = jest.fn();
   const viewGraphicRemoveMock = jest.fn();
@@ -84,34 +86,42 @@ describe("CircuitLayoutBtn", () => {
     expect(btnText).toBe("Circuit layout");
   });
 
+    function circuitLayoutBtn({
+                                  setIsLoading = setIsLoadingMock,
+                                  isLoading = false,
+                                  clickedRaceObj = testRace1,
+                                  isCircuitGraphicVisibleHandler = isCircuitGraphicVisibleMock,
+                                  isMapInAnimation = false}: any = {}
+    ) {
+        return <CircuitLayoutBtn
+            setIsLoading={setIsLoading}
+            isLoading={isLoading}
+            clickedRaceObj={clickedRaceObj}
+            isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleHandler}
+            isMapInAnimation={isMapInAnimation}
+        />;
+    }
+
+  // As you are repeating this over and over again - create a method and hide it. Maybe behind a builder-like pattern?
   test("shows Back button when a circuit graphic exists", () => {
     const useStateMock: any = (_: any) => [true, jest.fn()];
     jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
     render(
-      <CircuitLayoutBtn
-        setIsLoading={setIsLoadingMock}
-        isLoading={false}
-        clickedRaceObj={testRace1}
-        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleMock}
-        isMapInAnimation={false}
-      />
+      circuitLayoutBtn({})
     );
 
+    // You are writing test that will be broken easily. "What" button is it? Also, you can extract it to common.
     const btnText = screen.getByRole("button").innerHTML;
 
+    // This is weird assumption - as soon as you translate the app this test will break, but this test is named "Shows back button"
+      // Maybe check for ID?
     expect(btnText).toBe("Back");
   });
 
   test("renders button disabled if isLoading is true", () => {
     render(
-      <CircuitLayoutBtn
-        setIsLoading={setIsLoadingMock}
-        isLoading={false}
-        clickedRaceObj={testRace1}
-        isCircuitGraphicVisibleHandler={isCircuitGraphicVisibleMock}
-        isMapInAnimation={true}
-      />
+        circuitLayoutBtn({inMapAnimation: true})
     );
 
     const btn = screen.getByRole("button");
@@ -149,6 +159,7 @@ describe("CircuitLayoutBtn", () => {
       />
     );
 
+    // Definitely you do too much in this component
     const btn = screen.getByRole("button");
     fireEvent.click(btn);
     await waitFor(() => expect(setIsLoadingMock).toBeCalledTimes(2));

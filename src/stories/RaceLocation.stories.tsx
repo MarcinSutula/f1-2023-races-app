@@ -28,6 +28,7 @@ const Template = ({ backgroundColor, ...args }: RaceLocationStory) => {
   );
 };
 
+// This... is not a test code? Why are you hardcoding such values?
 export const CityAndCountry = Template.bind({}) as any;
 CityAndCountry.args = {
   city: "Jeddah",

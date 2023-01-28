@@ -15,7 +15,10 @@ type CircuitLayoutBtnProps = {
   isMapInAnimation: boolean;
 };
 
+// Btn? Is yr keybard damaged?
 function CircuitLayoutBtn({
+    // You are passing setIsLoading, isLoading etc. It seems like you are leaking abstraction as in
+    // button knows too much about application. Be more declarative
   setIsLoading,
   isLoading,
   clickedRaceObj,
@@ -27,11 +30,16 @@ function CircuitLayoutBtn({
 
   const isBtnDisabled = isLoading || isMapInAnimation;
 
+  // You are violating the SRP. "What" is this button doing? I cannot discern by just reading the code.
   const onCircuitLayoutBtnClickHandler = async () => {
     try {
+      // Try to always use parenthesis with if. It is easy to introduce a bug here
+      // Besides, why these can be undefined?
       if (!mapView || !mapView.view || !mapView.layer) return;
       const { view, layer } = mapView;
+      // Weird dependency injection, I'd wish to understand why are you passing a method instead of an object. It is not necessarily bad though
       setIsLoading(true);
+      // Split this to methods, your IF's are too long
       if (!circuitGraphic) {
         const circuitObj: CircuitObj | undefined = await fetchRelatedCircuit(
           layer,
@@ -62,9 +70,13 @@ function CircuitLayoutBtn({
         setCircuitGraphic(undefined);
         isCircuitGraphicVisibleHandler(false);
       }
+      // finally...
       setIsLoading(false);
     } catch (err) {
+      // finally...
       setIsLoading(false);
+      // Why are you handling this error here? What will cause the error?
+      // You are most likely hiding a problem
       if (err instanceof Error) {
         console.error(err.message);
         return;
