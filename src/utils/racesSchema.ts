@@ -8,6 +8,7 @@ export const raceObjSchema = yup
     name: yup.string().required(),
     city: yup.string().required(),
     country: yup.string().required(),
+      // Why snake_case? JS uses pascalCase
     race_date: yup
       .date()
       .transform((_, val) => new Date(val))

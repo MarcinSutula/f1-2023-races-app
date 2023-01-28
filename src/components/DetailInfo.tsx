@@ -7,6 +7,8 @@ export type DetailInfoProps = {
   customMainLabelColor?: string;
 };
 
+// No JSDoc, arcane properties. What is boolean "main"? Or separator index?
+// It seems like two separate functions
 function DetailInfo({
   label,
   info,

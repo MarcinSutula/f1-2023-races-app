@@ -75,7 +75,8 @@ export const getRacesLayer = (
   const racesLayer = layers.find((layer) =>
     FEATURELAYER_URL.includes(layer.url)
   );
-  return racesLayer ? racesLayer : undefined;
+  // Just a small thing for you
+  return racesLayer ?? undefined;
 };
 
 export const viewGoToGeometry: viewGoToGeometryFnType = async (
