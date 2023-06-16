@@ -1,4 +1,15 @@
-An app displaying F1 next seasons calendar (2023) with map and panel with additional info .
+An app displaying F1 next seasons calendar (2023) with map and panel containing additional details about chosen race and track.
+
+Stack: 
+-TypeScript
+-React
+-ArcGIS Maps SDK for JavaScript
+-ArcGIS REST JS API
+-Tailwind CSS
+-Jest
+-React Testing Library
+-Storybook
+-Yup
 
 Worked on mainly to practice:
 - ArcGIS API for JavaScript 4.2x with create-react-app
